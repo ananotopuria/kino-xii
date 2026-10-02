@@ -1,0 +1,15 @@
+import { createContext } from "react";
+import type { LoginCredentials, RegisterData, User } from "../../types/auth";
+
+export type AuthContextValue = {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  signIn: (credentials: LoginCredentials) => Promise<void>;
+  signUp: (data: RegisterData) => Promise<void>;
+  signOut: () => Promise<void>;
+};
+
+export const AuthContext = createContext<AuthContextValue | undefined>(
+  undefined,
+);
