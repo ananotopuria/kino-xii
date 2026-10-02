@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { Upload } from "lucide-react";
 
 import Modal from "../../components/common/Modal";
 import { useAuth } from "./useAuth";
@@ -25,11 +26,23 @@ const RegisterModal = ({ onClose, onLogIn }: RegisterModalProps) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, touchedFields },
+    control,
+    formState: { errors, isSubmitting, touchedFields, isValid },
   } = useForm<RegisterFormData>({
     resolver: yupResolver(registerSchema),
-    mode: "onBlur",
+    mode: "onChange",
   });
+
+  const [username, email, password, confirmPassword] = useWatch({
+    control,
+    name: ["username", "email", "password", "confirmPassword"],
+  });
+
+  const isFormFilled =
+    Boolean(username) &&
+    Boolean(email) &&
+    Boolean(password) &&
+    Boolean(confirmPassword);
 
   useEffect(() => {
     return () => {
@@ -83,63 +96,110 @@ const RegisterModal = ({ onClose, onLogIn }: RegisterModalProps) => {
   };
 
   const getInputClass = (hasError: boolean, isTouched: boolean | undefined) => {
-    return `w-full rounded-xl border bg-[#1D2133] px-4 py-3 pr-10 text-sm text-white outline-none transition ${
-      hasError
-        ? "border-red-500"
-        : isTouched
-          ? "border-green-500"
-          : "border-transparent"
-    }`;
+    return `
+      h-10 w-full rounded-xl border
+      bg-[#1E2031] px-4 pr-10
+      text-xs font-semibold text-white
+      outline-none transition
+      placeholder:text-[#A9A9A9]
+      ${
+        hasError
+          ? "border-[#EC3013] text-[#EC3013]"
+          : isTouched
+            ? "border-transparent"
+            : "border-transparent"
+      }
+    `;
+  };
+
+  const renderStatus = (hasError: boolean, isTouched: boolean | undefined) => {
+    if (hasError) {
+      return (
+        <span
+          className="
+            absolute right-3 top-1/2
+            flex h-4 w-4 -translate-y-1/2
+            items-center justify-center
+            rounded-full border border-[#EC3013]
+            text-[10px] font-bold text-[#EC3013]
+          "
+        >
+          !
+        </span>
+      );
+    }
+
+    if (isTouched) {
+      return (
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#22C55E]">
+          ✓
+        </span>
+      );
+    }
+
+    return null;
   };
 
   return (
     <Modal onClose={onClose}>
-      <div className="relative w-120 rounded-[28px] border border-white/15 bg-[#020A1D] p-8 text-white">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-5 top-5 text-xl text-white/70 hover:text-white"
-          aria-label="Close registration modal"
-        >
-          ✕
-        </button>
-
-        <h2 className="text-2xl font-semibold">Sign up</h2>
-
-        <p className="mt-1 text-sm text-white/60">
-          Create your Kino XII account
-        </p>
-
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          className="mt-6 space-y-3"
-        >
+      <div
+        className="
+          relative w-119
+          rounded-[28px]
+          border border-[#2A2C3D]
+          bg-[#070C1C]
+          p-8 text-white
+        "
+      >
+        {/* HEADER */}
+        <div className="flex items-start justify-between">
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              Avatar{" "}
-              <span className="font-normal text-white/50">(optional)</span>
-            </label>
+            <h2 className="text-xl font-extrabold leading-none">Sign up</h2>
 
-            <label className="flex cursor-pointer items-center gap-4 rounded-xl border border-dashed border-white/20 bg-[#1D2133] p-3">
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="Avatar preview"
-                  className="h-12 w-12 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-xl">
-                  +
-                </div>
-              )}
+            <p className="mt-2 text-xs text-[#A9A9A9]">Welcome to Kino XII</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close registration modal"
+            className="cursor-pointer text-2xl leading-none text-white"
+          >
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6">
+          {/* AVATAR */}
+          <div>
+            <label className="flex w-fit cursor-pointer items-center gap-3">
+              <div
+                className="
+                  flex h-10 w-10 shrink-0
+                  items-center justify-center
+                  overflow-hidden rounded-lg
+                  bg-[#1E2031]
+                "
+              >
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Upload size={16} className="text-[#A9A9A9]" />
+                )}
+              </div>
 
               <div>
-                <p className="text-sm font-medium">
-                  {avatar ? avatar.name : "Upload avatar"}
+                <p className="text-xs font-semibold text-white">
+                  Upload avatar (optional)
                 </p>
 
-                <p className="mt-1 text-xs text-white/50">JPG, PNG or WEBP</p>
+                <p className="mt-1 text-[10px] text-[#A9A9A9]">
+                  JPG, PNG or WEBP
+                </p>
               </div>
 
               <input
@@ -150,12 +210,16 @@ const RegisterModal = ({ onClose, onLogIn }: RegisterModalProps) => {
               />
             </label>
 
-            <p className="mt-1 min-h-4 text-xs text-red-500">{avatarError}</p>
+            <p className="mt-1 min-h-4 text-xs text-[#EC3013]">{avatarError}</p>
           </div>
-          <div>
+
+          {/* USERNAME */}
+          <div className="mt-3">
             <label
               htmlFor="username"
-              className="mb-2 block text-sm font-medium"
+              className={`mb-2 block text-xs font-semibold ${
+                errors.username ? "text-[#EC3013]" : "text-white"
+              }`}
             >
               Username
             </label>
@@ -165,34 +229,28 @@ const RegisterModal = ({ onClose, onLogIn }: RegisterModalProps) => {
                 id="username"
                 type="text"
                 {...register("username")}
-                placeholder="Enter your username"
+                placeholder="User"
                 className={getInputClass(
                   Boolean(errors.username),
                   touchedFields.username,
                 )}
               />
 
-              {touchedFields.username && !errors.username && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
-                  ✓
-                </span>
-              )}
-
-              {errors.username && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500">
-                  !
-                </span>
-              )}
+              {renderStatus(Boolean(errors.username), touchedFields.username)}
             </div>
 
-            <p className="mt-1 min-h-4 text-xs text-red-500">
+            <p className="mt-1 min-h-4 text-xs text-[#EC3013]">
               {errors.username?.message ?? ""}
             </p>
           </div>
-          <div>
+
+          {/* EMAIL */}
+          <div className="mt-2">
             <label
               htmlFor="register-email"
-              className="mb-2 block text-sm font-medium"
+              className={`mb-2 block text-xs font-semibold ${
+                errors.email ? "text-[#EC3013]" : "text-white"
+              }`}
             >
               Email
             </label>
@@ -209,118 +267,118 @@ const RegisterModal = ({ onClose, onLogIn }: RegisterModalProps) => {
                 )}
               />
 
-              {touchedFields.email && !errors.email && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
-                  ✓
-                </span>
-              )}
-
-              {errors.email && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500">
-                  !
-                </span>
-              )}
+              {renderStatus(Boolean(errors.email), touchedFields.email)}
             </div>
 
-            <p className="mt-1 min-h-4 text-xs text-red-500">
+            <p className="mt-1 min-h-4 text-xs text-[#EC3013]">
               {errors.email?.message ?? ""}
             </p>
           </div>
-          <div>
-            <label
-              htmlFor="register-password"
-              className="mb-2 block text-sm font-medium"
-            >
-              Password
-            </label>
 
-            <div className="relative">
-              <input
-                id="register-password"
-                type="password"
-                {...register("password")}
-                placeholder="Enter your password"
-                className={getInputClass(
-                  Boolean(errors.password),
-                  touchedFields.password,
-                )}
-              />
+          {/* PASSWORDS */}
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            {/* PASSWORD */}
+            <div>
+              <label
+                htmlFor="register-password"
+                className={`mb-2 block text-xs font-semibold ${
+                  errors.password ? "text-[#EC3013]" : "text-white"
+                }`}
+              >
+                Password
+              </label>
 
-              {touchedFields.password && !errors.password && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
-                  ✓
-                </span>
-              )}
+              <div className="relative">
+                <input
+                  id="register-password"
+                  type="password"
+                  {...register("password")}
+                  placeholder="••••••••"
+                  className={getInputClass(
+                    Boolean(errors.password),
+                    touchedFields.password,
+                  )}
+                />
 
-              {errors.password && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500">
-                  !
-                </span>
-              )}
+                {renderStatus(Boolean(errors.password), touchedFields.password)}
+              </div>
+
+              <p className="mt-1 min-h-4 text-xs text-[#EC3013]">
+                {errors.password?.message ?? ""}
+              </p>
             </div>
 
-            <p className="mt-1 min-h-4 text-xs text-red-500">
-              {errors.password?.message ?? ""}
-            </p>
-          </div>
-          <div>
-            <label
-              htmlFor="confirm-password"
-              className="mb-2 block text-sm font-medium"
-            >
-              Confirm password
-            </label>
+            {/* CONFIRM PASSWORD */}
+            <div>
+              <label
+                htmlFor="confirm-password"
+                className={`mb-2 block text-xs font-semibold ${
+                  errors.confirmPassword ? "text-[#EC3013]" : "text-white"
+                }`}
+              >
+                Confirm password
+              </label>
 
-            <div className="relative">
-              <input
-                id="confirm-password"
-                type="password"
-                {...register("confirmPassword")}
-                placeholder="Repeat your password"
-                className={getInputClass(
+              <div className="relative">
+                <input
+                  id="confirm-password"
+                  type="password"
+                  {...register("confirmPassword")}
+                  placeholder="••••••••"
+                  className={getInputClass(
+                    Boolean(errors.confirmPassword),
+                    touchedFields.confirmPassword,
+                  )}
+                />
+
+                {renderStatus(
                   Boolean(errors.confirmPassword),
                   touchedFields.confirmPassword,
                 )}
-              />
+              </div>
 
-              {touchedFields.confirmPassword && !errors.confirmPassword && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
-                  ✓
-                </span>
-              )}
-
-              {errors.confirmPassword && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500">
-                  !
-                </span>
-              )}
+              <p className="mt-1 min-h-4 text-xs text-[#EC3013]">
+                {errors.confirmPassword?.message ?? ""}
+              </p>
             </div>
-
-            <p className="mt-1 min-h-4 text-xs text-red-500">
-              {errors.confirmPassword?.message ?? ""}
-            </p>
           </div>
 
-          <p className="min-h-5 text-sm text-red-500">{apiError}</p>
+          {/* API ERROR */}
+          <p className="mt-1 min-h-4 text-xs text-[#EC3013]">{apiError}</p>
 
+          {/* SUBMIT */}
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-full bg-[#FF3217] px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={
+              isSubmitting || !isFormFilled || !isValid || Boolean(avatarError)
+            }
+            className="
+              mt-4 w-full rounded-full
+              bg-[#EC3013]
+              px-5.5 py-3.25
+              text-sm font-extrabold text-white
+              transition
+              hover:bg-[#d92b11]
+              disabled:cursor-not-allowed
+              disabled:bg-[#505261]
+              disabled:text-[#A9A9A9]
+            "
           >
             {isSubmitting ? "Creating account..." : "Sign up"}
           </button>
 
-          <p className="text-center text-sm text-white/60">
-            Already have an account?{" "}
+          {/* FOOTER */}
+          <div className="mt-6 flex items-center justify-center gap-1.5 text-sm">
+            <span className="text-[#A9A9A9]">Already have an account?</span>
+
             <button
               type="button"
               onClick={onLogIn}
-              className="font-semibold text-[#FF3217]"
+              className="cursor-pointer font-extrabold text-[#EC3013]"
             >
               Log in
             </button>
-          </p>
+          </div>
         </form>
       </div>
     </Modal>

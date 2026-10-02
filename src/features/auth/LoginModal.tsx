@@ -13,7 +13,6 @@ type LoginModalProps = {
 
 const LoginModal = ({ onClose, onSignUp }: LoginModalProps) => {
   const { signIn } = useAuth();
-
   const [apiError, setApiError] = useState("");
 
   const {
@@ -38,115 +37,200 @@ const LoginModal = ({ onClose, onSignUp }: LoginModalProps) => {
 
   return (
     <Modal onClose={onClose}>
-      <div className="relative w-120 rounded-2xl bg-white p-8 text-black">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 text-xl"
-          aria-label="Close login modal"
-        >
-          ✕
-        </button>
-        <h2 className="text-2xl font-semibold">Log In</h2>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          className="mt-6 space-y-4"
-        >
+      <div
+        className="
+          relative w-100.75 rounded-[28px]
+          border border-[#2A2C3D]
+          bg-[#070C1C] p-8
+          text-white
+          shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)]
+        "
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between">
           <div>
-            <label
-              htmlFor="email"
-              className="mb-2 block text-sm font-medium text-black"
-            >
-              Email
-            </label>
+            <h2 className="text-xl font-extrabold leading-none">Log in</h2>
 
-            <div className="relative">
-              <input
-                id="email"
-                type="email"
-                {...register("email")}
-                placeholder="example@gmail.com"
-                className={`w-full rounded-xl border bg-[#1D2133] px-4 py-3 pr-10 text-sm text-white outline-none transition ${
-                  errors.email
-                    ? "border-red-500"
-                    : touchedFields.email
-                      ? "border-green-500"
-                      : "border-transparent"
-                }`}
-              />
-
-              {touchedFields.email && !errors.email && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
-                  ✓
-                </span>
-              )}
-
-              {errors.email && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500">
-                  !
-                </span>
-              )}
-            </div>
-
-            <p className="mt-2 min-h-4 text-xs text-red-500">
-              {errors.email?.message ?? ""}
+            <p className="mt-2 text-xs leading-[1.3] text-[#A9A9A9]">
+              Welcome back to Kino XII
             </p>
           </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className={`mb-2 block text-sm font-medium ${
-                errors.password ? "text-red-500" : "text-black"
-              }`}
-            >
-              Password
-            </label>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close login modal"
+            className="cursor-pointer text-2xl leading-none text-white"
+          >
+            ×
+          </button>
+        </div>
 
-            <div className="relative">
-              <input
-                id="password"
-                type="password"
-                {...register("password")}
-                placeholder="Enter your password"
-                className={`w-full rounded-xl border bg-[#1D2133] px-4 py-3 pr-10 text-sm text-white outline-none transition ${
-                  errors.password
-                    ? "border-red-500"
-                    : touchedFields.password
-                      ? "border-green-500"
-                      : "border-transparent"
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6" noValidate>
+          <div className="space-y-6">
+            {/* EMAIL */}
+            <div>
+              <label
+                htmlFor="email"
+                className={`mb-2.5 block text-xs font-semibold ${
+                  errors.email ? "text-[#EC3013]" : "text-white"
                 }`}
-              />
-              {touchedFields.password && !errors.password && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
-                  ✓
-                </span>
-              )}
-              {errors.password && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500">
-                  !
-                </span>
-              )}
+              >
+                Email
+              </label>
+
+              <div className="relative">
+                <input
+                  id="email"
+                  type="email"
+                  {...register("email")}
+                  placeholder="example@gmail.com"
+                  className={`
+                    h-10 w-full rounded-xl border
+                    bg-[#1E2031] px-4 pr-11
+                    text-xs font-semibold
+                    outline-none
+                    placeholder:text-[#A9A9A9]
+                    ${
+                      errors.email
+                        ? "border-[#EC3013] text-[#EC3013]"
+                        : "border-transparent text-white"
+                    }
+                  `}
+                />
+
+                {touchedFields.email && !errors.email && (
+                  <span
+                    className="
+                      absolute right-4 top-1/2
+                      -translate-y-1/2
+                      text-base font-semibold text-[#22C55E]
+                    "
+                  >
+                    ✓
+                  </span>
+                )}
+
+                {errors.email && (
+                  <span
+                    className="
+                      absolute right-4 top-1/2
+                      flex h-4 w-4 -translate-y-1/2
+                      items-center justify-center
+                      rounded-full border border-[#EC3013]
+                      text-[10px] font-bold text-[#EC3013]
+                    "
+                  >
+                    !
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-2 min-h-4 text-xs font-semibold text-[#EC3013]">
+                {errors.email?.message ?? ""}
+              </p>
             </div>
-            <p className="mt-2 min-h-4 text-xs text-red-500">
-              {errors.password?.message ?? ""}
-            </p>
+
+            {/* PASSWORD */}
+            <div>
+              <label
+                htmlFor="password"
+                className={`mb-2.5 block text-xs font-semibold ${
+                  errors.password ? "text-[#EC3013]" : "text-white"
+                }`}
+              >
+                Password
+              </label>
+
+              <div className="relative">
+                <input
+                  id="password"
+                  type="password"
+                  {...register("password")}
+                  placeholder="••••••••"
+                  className={`
+                    h-10 w-full rounded-xl border
+                    bg-[#1E2031] px-4 pr-11
+                    text-xs font-semibold
+                    outline-none
+                    placeholder:text-[#A9A9A9]
+                    ${
+                      errors.password
+                        ? "border-[#EC3013] text-[#EC3013]"
+                        : "border-transparent text-white"
+                    }
+                  `}
+                />
+
+                {touchedFields.password && !errors.password && (
+                  <span
+                    className="
+                      absolute right-4 top-1/2
+                      -translate-y-1/2
+                      text-base font-semibold text-[#22C55E]
+                    "
+                  >
+                    ✓
+                  </span>
+                )}
+
+                {errors.password && (
+                  <span
+                    className="
+                      absolute right-4 top-1/2
+                      flex h-4 w-4 -translate-y-1/2
+                      items-center justify-center
+                      rounded-full border border-[#EC3013]
+                      text-[10px] font-bold text-[#EC3013]
+                    "
+                  >
+                    !
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-2 min-h-4 text-xs font-semibold text-[#EC3013]">
+                {errors.password?.message ?? ""}
+              </p>
+            </div>
           </div>
-          <p className="min-h-5 text-sm text-red-500">{apiError}</p>
+
+          {apiError && (
+            <p className="mt-2 text-xs font-semibold text-[#EC3013]">
+              {apiError}
+            </p>
+          )}
+
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-red-500 px-4 py-3 text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="
+              mt-6 flex w-full cursor-pointer
+              items-center justify-center
+              rounded-full bg-[#EC3013]
+              px-5.5 py-3.25
+              text-sm font-extrabold text-white
+              transition
+              hover:bg-[#d92b11]
+              disabled:cursor-not-allowed
+              disabled:bg-[#505261]
+              disabled:text-[#A9A9A9]
+            "
           >
-            {isSubmitting ? "Logging in..." : "Log In"}
+            {isSubmitting ? "Logging in..." : "Log in"}
           </button>
-          <p className="text-center text-sm">
-            Don't have an account?{" "}
-            <button type="button" onClick={onSignUp} className="font-semibold">
-              Sign Up
+
+          <div className="mt-6 flex items-center justify-center gap-1.25 text-sm">
+            <span className="text-[#A9A9A9]">Don't have an account?</span>
+
+            <button
+              type="button"
+              onClick={onSignUp}
+              className="cursor-pointer font-extrabold text-[#EC3013]"
+            >
+              Sign up
             </button>
-          </p>
+          </div>
         </form>
       </div>
     </Modal>
