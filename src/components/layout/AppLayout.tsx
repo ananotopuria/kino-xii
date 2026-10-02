@@ -1,15 +1,36 @@
 import { Outlet } from "react-router-dom";
+import { useState } from "react";
+
+import Header from "./Header";
+import LoginModal from "../../features/auth/LoginModal";
+import RegistrationModal from "../../features/auth/RegisterModal";
 
 const AppLayout = () => {
-  return (
-    <div className="min-h-screen bg-black text-white">
-      <header>Header</header>
+  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
 
+  return (
+    <>
+      <Header
+        onLogin={() => setAuthModal("login")}
+        onSignUp={() => setAuthModal("signup")}
+      />
       <main>
         <Outlet />
       </main>
-      <footer>Footer</footer>
-    </div>
+      {authModal === "login" && (
+        <LoginModal
+          onClose={() => setAuthModal(null)}
+          onSignUp={() => setAuthModal("signup")}
+        />
+      )}
+
+      {authModal === "signup" && (
+        <RegistrationModal
+          onClose={() => setAuthModal(null)}
+          onLogIn={() => setAuthModal("login")}
+        />
+      )}
+    </>
   );
 };
 
