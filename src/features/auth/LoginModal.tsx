@@ -9,9 +9,10 @@ import { loginSchema, type LoginFormData } from "./schemas/loginSchema";
 type LoginModalProps = {
   onClose: () => void;
   onSignUp: () => void;
+  onSuccess?: () => void;
 };
 
-const LoginModal = ({ onClose, onSignUp }: LoginModalProps) => {
+const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
   const { signIn } = useAuth();
   const [apiError, setApiError] = useState("");
 
@@ -29,7 +30,7 @@ const LoginModal = ({ onClose, onSignUp }: LoginModalProps) => {
 
     try {
       await signIn(data);
-      onClose();
+      (onSuccess ?? onClose)();
     } catch {
       setApiError("Invalid email or password");
     }

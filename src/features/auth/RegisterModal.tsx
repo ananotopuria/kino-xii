@@ -13,9 +13,10 @@ import {
 type RegisterModalProps = {
   onClose: () => void;
   onLogIn: () => void;
+  onSuccess?: () => void;
 };
 
-const RegisterModal = ({ onClose, onLogIn }: RegisterModalProps) => {
+const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
   const { signUp } = useAuth();
 
   const [apiError, setApiError] = useState("");
@@ -89,7 +90,7 @@ const RegisterModal = ({ onClose, onLogIn }: RegisterModalProps) => {
         avatar,
       });
 
-      onClose();
+      (onSuccess ?? onClose)();
     } catch {
       setApiError("Registration failed. Please try again.");
     }

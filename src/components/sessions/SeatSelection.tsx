@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../features/auth/useAuth";
 import type { FilterOptions } from "../../types/filterOptions";
-import type { Seat, SeatMap as SeatMapData, SessionDetails } from "../../types/sessions";
+import type { Seat, SeatMap as SeatMapData, SeatSelection as SelectedSeat, SessionDetails } from "../../types/sessions";
 import { eligibleTicketTypes, reconcileSelection, seatsInMap, ticketPrice, toggleSeat } from "../../utils/seatSelection";
 import SeatMap from "./SeatMap";
 
@@ -11,26 +10,19 @@ type SeatSelectionProps = {
   map: SeatMapData;
   options: FilterOptions;
   disabled: boolean;
+  selection: SelectedSeat[];
+  onChange: (selection: SelectedSeat[]) => void;
+  onContinue: () => void;
+  creatingHold: boolean;
 };
 
 const money = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
-const SeatSelection = ({ session, map, options, disabled }: SeatSelectionProps) => {
+const SeatSelection = ({ session, map, options, disabled, selection: currentSelection, onChange, onContinue, creatingHold }: SeatSelectionProps) => {
   const { user } = useAuth();
   const ticketTypes = eligibleTicketTypes(options.ticketTypes, session.movie.ageRating.minAge);
   const defaultType = ticketTypes.find((type) => type.slug === "adult") ?? ticketTypes[0];
-  const [state, setState] = useState(() => ({
-    map,
-    selection: reconcileSelection(seatsInMap(map).filter((seat) => seat.isMine).map((seat) => ({
-      seatId: seat.id, ticketTypeId: defaultType?.id ?? -1,
-    })), map, ticketTypes, options.maxSeatsPerOrder),
-  }));
-
-  // Remove selections lost to another user when the live map refetches.
-  if (state.map !== map) {
-    setState({ map, selection: reconcileSelection(state.selection, map, ticketTypes, options.maxSeatsPerOrder) });
-  }
-  const selection = reconcileSelection(state.selection, map, ticketTypes, options.maxSeatsPerOrder);
+  const selection = reconcileSelection(currentSelection, map, ticketTypes, options.maxSeatsPerOrder);
   const selectedIds = new Set(selection.map((item) => item.seatId));
   const seatLookup = new Map(seatsInMap(map).map((seat) => [seat.id, seat]));
   const ageRestricted = user?.age != null && user.age < session.movie.ageRating.minAge;
@@ -43,7 +35,7 @@ const SeatSelection = ({ session, map, options, disabled }: SeatSelectionProps) 
 
   const toggle = (seat: Seat) => {
     if (selectionDisabled || !defaultType) return;
-    setState({ map, selection: toggleSeat(selection, seat, defaultType.id, options.maxSeatsPerOrder) });
+    onChange(toggleSeat(selection, seat, defaultType.id, options.maxSeatsPerOrder));
   };
 
   return (
@@ -74,7 +66,7 @@ const SeatSelection = ({ session, map, options, disabled }: SeatSelectionProps) 
               <div role="group" aria-label={`Ticket type for seat ${seat.code}`} className="flex flex-wrap gap-2 border-t border-[#2a2c3d] pt-3">
                 {ticketTypes.map((ticket) => <button key={ticket.id} type="button" aria-pressed={item.ticketTypeId === ticket.id}
                   title={ticket.note ?? undefined} disabled={selectionDisabled}
-                  onClick={() => setState({ map, selection: selection.map((selected) => selected.seatId === seat.id ? { ...selected, ticketTypeId: ticket.id } : selected) })}
+                  onClick={() => onChange(selection.map((selected) => selected.seatId === seat.id ? { ...selected, ticketTypeId: ticket.id } : selected))}
                   className={`flex-1 cursor-pointer whitespace-nowrap rounded-2xl px-2 py-2 disabled:cursor-not-allowed ${item.ticketTypeId === ticket.id ? "bg-[#ec3013]" : "bg-[#2a2c3d]"}`}>
                   {ticket.name} {Math.round(ticket.priceRatio * 100)}%
                 </button>)}
@@ -88,7 +80,7 @@ const SeatSelection = ({ session, map, options, disabled }: SeatSelectionProps) 
         </div>
         <div className="space-y-3 pt-2.5">
           <div aria-live="polite" className="flex items-center justify-between px-1.25"><span className="text-xs font-semibold">SUBTOTAL</span><span className="text-2xl font-extrabold">₾ {money(subtotal)}</span></div>
-          <button type="button" disabled title="Checkout will be available in the next booking step." className="w-full cursor-not-allowed rounded-full bg-[#505261] px-5.5 py-3.25 text-sm font-extrabold text-[#a9a9a9]">Next: Checkout</button>
+          <button type="button" onClick={onContinue} disabled={selectionDisabled || selection.length === 0} className="w-full cursor-pointer rounded-full bg-[#ec3013] px-5.5 py-3.25 text-sm font-extrabold disabled:cursor-not-allowed disabled:bg-[#505261] disabled:text-[#a9a9a9]">{creatingHold ? "Holding seats..." : "Next: Checkout"}</button>
           <p className="text-xs text-[#a9a9a9]">New selections are not reserved yet.</p>
         </div>
       </aside>
