@@ -5,6 +5,7 @@ import { useMovieSessions } from "../../features/auth/movies/useMovieSessions";
 
 type MovieSessionsProps = {
   slug: string;
+  minAge: number;
   dates: string[];
   selectedDate: string;
   onSelectDate: (date: string) => void;
@@ -12,6 +13,7 @@ type MovieSessionsProps = {
 
 const MovieSessions = ({
   slug,
+  minAge,
   dates,
   selectedDate,
   onSelectDate,
@@ -71,7 +73,7 @@ const MovieSessions = ({
 
                     <div className="flex flex-wrap gap-3">
                       {sessions.map((session) => (
-                        <SessionCard key={session.id} session={session} />
+                        <SessionCard key={session.id} session={session} minAge={minAge} />
                       ))}
                     </div>
                   </div>

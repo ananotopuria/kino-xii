@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import SessionsFilters from "../components/sessions/SessionsFilters";
 import SessionCard from "../components/movie/SessionCard";
 import { useFilterOptions } from "../features/auth/filters/useFilterOptions";
@@ -9,7 +9,6 @@ import { availableFormats, localDate, paginationItems, readSessionsParams, sessi
 
 const Sessions = () => {
   const [query, setQuery] = useSearchParams();
-  const navigate = useNavigate();
   const filters = useFilterOptions();
   const params = readSessionsParams(query);
   const formats = filters.data ? availableFormats(filters.data, params.venues) : undefined;
@@ -79,7 +78,7 @@ const Sessions = () => {
                     </div>
                   </Link>
                   <div role="region" aria-label={`${movie.title} showtimes`} tabIndex={0} className="flex gap-3 overflow-x-auto pb-1 focus-visible:outline-2 focus-visible:outline-white">
-                    {movieSessions.map((session) => <SessionCard key={session.id} session={session} variant="listing" onClick={() => navigate(`/movies/${movie.slug}`)} />)}
+                    {movieSessions.map((session) => <SessionCard key={session.id} session={session} variant="listing" minAge={movie.ageRating.minAge} />)}
                   </div>
                 </article>
               ))}

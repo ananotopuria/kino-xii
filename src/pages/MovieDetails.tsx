@@ -6,10 +6,10 @@ import MovieInfo from "../components/movie/MovieInfo";
 import MovieSessions from "../components/movie/MovieSessions";
 import { useMovie } from "../features/auth/movies/useMovie";
 
-const MovieDetails = () => {
+const MovieDetails = ({ movieSlug }: { movieSlug?: string }) => {
   const { slug = "" } = useParams<{ slug: string }>();
 
-  const { data: movie, isLoading, isError } = useMovie(slug);
+  const { data: movie, isLoading, isError } = useMovie(movieSlug ?? slug);
 
   const [selectedDate, setSelectedDate] = useState("");
 
@@ -37,7 +37,8 @@ const MovieDetails = () => {
 
       <section className="grid grid-cols-[1fr_320px] gap-20 px-15 py-10">
         <MovieSessions
-          slug={slug}
+          slug={movie.slug}
+          minAge={movie.ageRating.minAge}
           dates={movie.availableDates}
           selectedDate={activeDate}
           onSelectDate={setSelectedDate}
