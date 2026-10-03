@@ -10,12 +10,12 @@ const SessionCard = ({ session }: SessionCardProps) => {
       type="button"
       disabled={session.isSoldOut}
       className="
-        min-w-42.5
+        min-w-52
         cursor-pointer
         rounded-xl
         bg-white/10
         px-4
-        py-4
+        py-3
         text-left
         transition
         hover:bg-white/15
@@ -23,19 +23,36 @@ const SessionCard = ({ session }: SessionCardProps) => {
         disabled:opacity-40
       "
     >
-      <p className="text-xs text-white/50">Hall {session.hall.name}</p>
+      {/* TIME + FORMAT */}
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-xl font-bold text-white">{session.time}</span>
 
-      <div className="mt-2 flex items-center justify-between">
-        <span className="text-xl font-bold">{session.time}</span>
-
-        <span className="font-semibold text-[#EC3013]">₾{session.price}</span>
+        <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-medium text-white">
+          {session.format.name}
+        </span>
       </div>
 
-      <div className="mt-2 flex justify-between text-xs text-white/50">
-        <span>{session.format.name}</span>
+      {/* LANGUAGE + SEATS */}
+      <div className="mt-2 flex items-center justify-between gap-4 text-xs">
+        <span className="text-white/50">{session.language.name}</span>
 
-        <span>
-          {session.isSoldOut ? "Sold out" : `${session.seatsLeft} left`}
+        <span
+          className={
+            session.isSoldOut ? "text-white/40" : "font-medium text-emerald-400"
+          }
+        >
+          {session.isSoldOut ? "Sold out" : `🎟 ${session.seatsLeft} left`}
+        </span>
+      </div>
+
+      {/* VENUE / HALL + PRICE */}
+      <div className="mt-2 flex items-center justify-between gap-4">
+        <span className="text-xs font-medium text-white">
+          {session.venue.name} · Hall {session.hall.name}
+        </span>
+
+        <span className="text-sm font-semibold text-white">
+          ₾{session.price}
         </span>
       </div>
     </button>
