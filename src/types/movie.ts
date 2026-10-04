@@ -39,6 +39,13 @@ export type MoviesResponse = {
   data: Movie[];
 };
 
+export type MovieNotificationResponse = {
+  data: {
+    movieId: number;
+    subscribed: true;
+  };
+};
+
 export type MovieDetails = Movie & {
   synopsis: string;
   director: string;

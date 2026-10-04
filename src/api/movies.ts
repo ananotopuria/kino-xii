@@ -3,7 +3,18 @@ import type {
   MoviesResponse,
   MovieDetailsResponse,
   MovieSessionsResponse,
+  MovieNotificationResponse,
 } from "../types/movie";
+
+export const notifyMovie = async (
+  movieSlug: string,
+): Promise<MovieNotificationResponse["data"]> => {
+  const response = await apiClient.post<MovieNotificationResponse>(
+    `/movies/${encodeURIComponent(movieSlug)}/notify`,
+  );
+
+  return response.data.data;
+};
 
 export const searchMovies = async (
   query: string,
