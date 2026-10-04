@@ -1,17 +1,29 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import MovieHero from "../components/movie/MovieHero";
 import MovieInfo from "../components/movie/MovieInfo";
 import MovieSessions from "../components/movie/MovieSessions";
 import { useMovie } from "../features/auth/movies/useMovie";
+import { recordRecentlyViewed } from "../features/movies/recentlyViewed";
 
 const MovieDetails = ({ movieSlug }: { movieSlug?: string }) => {
   const { slug = "" } = useParams<{ slug: string }>();
 
-  const { data: movie, isLoading, isError } = useMovie(movieSlug ?? slug);
+  const activeSlug = movieSlug ?? slug;
+  const { data: movie, isLoading, isError } = useMovie(activeSlug);
 
   const [selectedDate, setSelectedDate] = useState("");
+  const recordedSlug = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Count each opened route once, including cached details. Background
+    // refetches and Strict Mode must not reorder history as new views.
+    if (recordedSlug.current !== activeSlug) recordedSlug.current = null;
+    if (!movie || isLoading || isError || recordedSlug.current === activeSlug) return;
+    recordRecentlyViewed(movie);
+    recordedSlug.current = activeSlug;
+  }, [activeSlug, movie, isLoading, isError]);
 
   if (isLoading) {
     return (
