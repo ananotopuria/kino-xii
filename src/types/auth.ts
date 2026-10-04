@@ -21,6 +21,14 @@ export type LoginCredentials = {
   password: string;
 };
 
+export type ProfileFields = {
+  fullName: string;
+  mobileNumber: string;
+  dateOfBirth: string;
+  preferredVenueId: string;
+  avatar?: File;
+};
+
 export type AuthResponse = {
   data: {
     user: User;

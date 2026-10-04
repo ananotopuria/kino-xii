@@ -27,7 +27,7 @@ const BookingConfirmation = ({ order }: { order: Order }) => (
       <div className="flex items-center justify-between"><span className="text-[#a9a9a9]">TOTAL PAID</span><span className="text-lg font-extrabold">₾ {money(order.totalPrice)}</span></div>
     </div>
     <div className="flex flex-wrap justify-center gap-3 text-sm font-extrabold">
-      <Link to="/profile" className="rounded-full bg-[#ec3013] px-5.5 py-3.25">View my tickets</Link>
+      <Link to="/profile?tab=tickets" className="rounded-full bg-[#ec3013] px-5.5 py-3.25">View my tickets</Link>
       <Link to="/" className="rounded-full bg-white/10 px-5.5 py-3.25">Back to home</Link>
     </div>
   </div>

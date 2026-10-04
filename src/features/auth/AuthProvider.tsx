@@ -65,6 +65,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         user,
         isAuthenticated,
         isLoading,
+        updateUser: (updated) => setUser((current) => current?.id === updated.id ? updated : current),
         signIn,
         signUp,
         signOut,

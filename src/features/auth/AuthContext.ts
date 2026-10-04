@@ -5,6 +5,7 @@ export type AuthContextValue = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  updateUser: (user: User) => void;
   signIn: (credentials: LoginCredentials) => Promise<void>;
   signUp: (data: RegisterData) => Promise<void>;
   signOut: () => Promise<void>;
