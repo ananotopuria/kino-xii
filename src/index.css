@@ -7,3 +7,8 @@ body {
   font-family: "Archivo", sans-serif;
   background: #020817;
 }
+
+/* The Header has its own clear button; keep the Sessions search control intact. */
+input[data-header-search]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}

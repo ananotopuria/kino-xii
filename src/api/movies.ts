@@ -5,6 +5,18 @@ import type {
   MovieSessionsResponse,
 } from "../types/movie";
 
+export const searchMovies = async (
+  query: string,
+  signal?: AbortSignal,
+): Promise<MoviesResponse["data"]> => {
+  const response = await apiClient.get<MoviesResponse>("/search", {
+    params: { q: query },
+    signal,
+  });
+
+  return response.data.data;
+};
+
 export const getNowPlaying = async (): Promise<MoviesResponse> => {
   const response = await apiClient.get<MoviesResponse>("/movies/now-playing");
 
