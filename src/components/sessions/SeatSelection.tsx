@@ -74,8 +74,8 @@ const SeatSelection = ({ session, map, options, disabled, selection: currentSele
             </div>;
           })}
           {ageRestricted && <p role="alert" className="text-xs text-amber-400">{session.movie.ageRating.description} You must be at least {session.movie.ageRating.minAge} to book.</p>}
-          {!user && <p className="text-xs text-[#a9a9a9]">Sign in before checkout to book your seats.</p>}
-          {user && !user.profileComplete && <p className="text-xs text-amber-400"><Link to="/profile" className="underline">Complete your profile</Link> before booking.</p>}
+          {!user && <p className="text-xs text-[#a9a9a9]">Sign in to select your seats.</p>}
+          {user && !user.profileComplete && <p className="text-xs text-amber-400"><Link to="/profile" state={{ returnTo: `/sessions/${session.id}` }} className="underline">Complete your profile</Link> before booking.</p>}
           {!defaultType && <p role="status" className="text-xs text-amber-400">No eligible ticket types are available for this film.</p>}
         </div>
         <div className="space-y-3 pt-2.5">

@@ -8,9 +8,10 @@ import type { SeatMap, SeatSelection, SessionDetails } from "../../../types/sess
 import { bookingError, bookingStorageKey, dropContested, HOLD_EXPIRED, holdSelection, remainingSeconds } from "../../../utils/booking";
 import { eligibleTicketTypes, reconcileSelection, seatsInMap } from "../../../utils/seatSelection";
 import { useAuth } from "../useAuth";
+import { useAuthReplay } from "../useAuthReplay";
 import { useBookingMutations } from "./useBookingMutations";
 
-type PendingAction = { kind: "hold" } | { kind: "order"; fields: CheckoutFields } | { kind: "restore"; id: string } | { kind: "exit"; to: string; state: unknown };
+type PendingAction = { kind: "selection"; selection: SeatSelection[] } | { kind: "hold" } | { kind: "order"; fields: CheckoutFields } | { kind: "restore"; id: string } | { kind: "exit"; to: string; state: unknown };
 type Props = { session: SessionDetails; map: SeatMap; options: FilterOptions };
 
 export const useBooking = ({ session, map, options }: Props) => {
@@ -25,7 +26,6 @@ export const useBooking = ({ session, map, options }: Props) => {
   const [notice, setNotice] = useState("");
   const [profileRequired, setProfileRequired] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
   const [seconds, setSeconds] = useState(0);
   const [restoredFor, setRestoredFor] = useState(() =>
     user && sessionStorage.getItem(bookingStorageKey(session.id, user.id)) ? "" : ownerKey);
@@ -41,10 +41,17 @@ export const useBooking = ({ session, map, options }: Props) => {
   });
   const activeHold = useRef<SeatHold | null>(null);
   const persisted = useRef<{ key: string; id: string } | null>(null);
-  const pendingAuth = useRef<PendingAction | null>(null);
   const actionLock = useRef(false);
   const restoreGeneration = useRef(0);
   const restoring = restoredFor !== ownerKey;
+  const auth = useAuthReplay<PendingAction>(async (action) => {
+    if (action.kind === "selection") changeSelection(action.selection);
+    else if (action.kind === "hold") await proceed();
+    else if (action.kind === "order") await pay(action.fields);
+    else if (action.kind === "restore") await restore(action.id);
+    else navigate(action.to, { state: action.state });
+  }, !restoring);
+  const { requestLogin } = auth;
   const busy = restoring || mutations.createHold.isPending || mutations.createOrder.isPending || mutations.releaseHold.isPending;
   const types = eligibleTicketTypes(options.ticketTypes, session.movie.ageRating.minAge);
   const currentSelection = reconcileSelection(selection, map, types, options.maxSeatsPerOrder);
@@ -68,7 +75,8 @@ export const useBooking = ({ session, map, options }: Props) => {
     setHold(next);
     setSeconds(remainingSeconds(next));
     setSelection(holdSelection(next, options.ticketTypes));
-    setStep("checkout");
+    if (user?.profileComplete === true) setStep("checkout");
+    else requireProfile();
     setRestoreFailed(false);
     if (user) {
       const key = bookingStorageKey(session.id, user.id);
@@ -78,19 +86,25 @@ export const useBooking = ({ session, map, options }: Props) => {
   };
   const expire = (message = HOLD_EXPIRED) => {
     clearHold();
-    pendingAuth.current = null;
+    auth.clearPendingAuth();
     setSelection([]);
     setStep("seats");
     setFieldErrors({});
     setNotice(message);
     void refreshSeats();
   };
-  const requestLogin = (action: PendingAction) => {
-    pendingAuth.current = action;
-    setAuthModal("login");
+  const requireProfile = () => {
+    setStep("seats");
+    setProfileRequired(true);
+    setNotice("Complete your profile to book tickets.");
   };
+  function changeSelection(next: SeatSelection[]) {
+    if (!user) { requestLogin({ kind: "selection", selection: next }); return; }
+    if (user.profileComplete !== true) { requireProfile(); return; }
+    setSelection(next);
+  }
 
-  const restore = async (id: string) => {
+  async function restore(id: string) {
     const generation = restoreGeneration.current;
     try {
       const restored = await queryClient.fetchQuery({
@@ -111,7 +125,7 @@ export const useBooking = ({ session, map, options }: Props) => {
       else if (failure.status === 403 || failure.status === 404) clearHold();
       else setRestoreFailed(true);
     }
-  };
+  }
 
   const restoreForUser = useEffectEvent(async () => {
     const generation = restoreGeneration.current;
@@ -127,7 +141,6 @@ export const useBooking = ({ session, map, options }: Props) => {
   useEffect(() => {
     restoreGeneration.current += 1;
     // Restore synchronizes persisted identifiers with an asynchronous API read.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void restoreForUser();
     return () => { restoreGeneration.current += 1; };
   }, [ownerKey]);
@@ -190,9 +203,10 @@ export const useBooking = ({ session, map, options }: Props) => {
     }
   };
 
-  const proceed = async () => {
+  async function proceed() {
     if (actionLock.current || restoring || restoreFailed || !currentSelection.length) return;
     if (!user) { requestLogin({ kind: "hold" }); return; }
+    if (user.profileComplete !== true) { requireProfile(); return; }
     actionLock.current = true;
     setNotice("");
     setProfileRequired(false);
@@ -208,20 +222,21 @@ export const useBooking = ({ session, map, options }: Props) => {
     } finally {
       actionLock.current = false;
     }
-  };
+  }
 
-  const pay = async (fields: CheckoutFields) => {
+  async function pay(fields: CheckoutFields) {
     const current = activeHold.current;
     if (actionLock.current || !current) return;
     if (remainingSeconds(current) === 0) { expire(); return; }
     if (!user) { requestLogin({ kind: "order", fields }); return; }
+    if (user.profileComplete !== true) { requireProfile(); return; }
     actionLock.current = true;
     setNotice("");
     setFieldErrors({});
     try {
       const result = await mutations.createOrder.mutateAsync({ ...fields, holdId: current.holdId });
       clearHold();
-      pendingAuth.current = null;
+      auth.clearPendingAuth();
       setSelection([]);
       setOrder(result);
       void queryClient.invalidateQueries({ queryKey: ["sessions"] });
@@ -234,19 +249,7 @@ export const useBooking = ({ session, map, options }: Props) => {
       mutations.createOrder.reset();
       actionLock.current = false;
     }
-  };
-
-  const resume = useEffectEvent(async () => {
-    if (!user || restoring || !pendingAuth.current) return;
-    const action = pendingAuth.current;
-    pendingAuth.current = null;
-    setAuthModal(null);
-    if (action.kind === "hold") await proceed();
-    else if (action.kind === "order") await pay(action.fields);
-    else if (action.kind === "restore") await restore(action.id);
-    else navigate(action.to, { state: action.state });
-  });
-  useEffect(() => { void resume(); }, [user, restoring]);
+  }
 
   const blocker = useBlocker(({ currentLocation, nextLocation }) =>
     currentLocation.pathname !== nextLocation.pathname && (actionLock.current || persisted.current !== null));
@@ -278,8 +281,8 @@ export const useBooking = ({ session, map, options }: Props) => {
   useEffect(() => { if (blocker.state === "blocked") void leave(); }, [blocker.state]);
 
   return {
-    hold, order, step, notice, profileRequired, fieldErrors, authModal, seconds, restoring, restoreFailed, busy,
-    selection: currentSelection, setSelection, proceed, pay,
+    hold, order, step, notice, profileRequired, fieldErrors, seconds, restoring, restoreFailed, busy,
+    selection: currentSelection, setSelection: changeSelection, proceed, pay,
     creatingHold: mutations.createHold.isPending,
     submittingOrder: mutations.createOrder.isPending,
     releasingHold: mutations.releaseHold.isPending,
@@ -289,8 +292,6 @@ export const useBooking = ({ session, map, options }: Props) => {
       setRestoredFor("");
       void restore(persisted.current.id).finally(() => setRestoredFor(ownerKey));
     },
-    setAuthModal,
-    cancelAuth: () => { pendingAuth.current = null; setAuthModal(null); },
-    authenticated: () => setAuthModal(null),
+    ...auth,
   };
 };

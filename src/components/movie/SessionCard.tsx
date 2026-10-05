@@ -1,6 +1,10 @@
 import type { MovieSession } from "../../types/movie";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/useAuth";
+import { useAuthReplay } from "../../features/auth/useAuthReplay";
+import LoginModal from "../../features/auth/LoginModal";
+import RegisterModal from "../../features/auth/RegisterModal";
+import { createPortal } from "react-dom";
 
 type SessionCardProps = {
   session: MovieSession;
@@ -15,13 +19,24 @@ const SessionCard = ({
 }: SessionCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const ageRestricted = user?.age != null && user.age < minAge;
+  const enter = (target: { id: number; origin: string }) => {
+    if (!user || session.isSoldOut || ageRestricted) return;
+    const returnTo = `/sessions/${target.id}`;
+    if (user.profileComplete !== true) {
+      navigate("/profile", { state: { returnTo } });
+      return;
+    }
+    navigate(returnTo, { state: { sessionOrigin: target.origin } });
+  };
+  const auth = useAuthReplay(enter);
   const listing = variant === "listing";
   return (
+    <>
     <button
       type="button"
-      disabled={session.isSoldOut || ageRestricted}
+      disabled={isLoading || session.isSoldOut || ageRestricted || Boolean(auth.authModal)}
       title={
         ageRestricted
           ? `This film is restricted to ages ${minAge} and over.`
@@ -29,9 +44,9 @@ const SessionCard = ({
       }
       onClick={() => {
         if (!session.isSoldOut && !ageRestricted) {
-          navigate(`/sessions/${session.id}`, {
-            state: { sessionOrigin: location.pathname + location.search },
-          });
+          const target = { id: session.id, origin: location.pathname + location.search };
+          if (!user) auth.requestLogin(target);
+          else enter(target);
         }
       }}
       className={
@@ -123,6 +138,10 @@ const SessionCard = ({
         </span>
       </div>
     </button>
+    {auth.authModal && createPortal(auth.authModal === "login"
+      ? <LoginModal onClose={auth.cancelAuth} onSuccess={auth.authenticated} onSignUp={() => auth.setAuthModal("signup")} />
+      : <RegisterModal onClose={auth.cancelAuth} onSuccess={auth.authenticated} onLogIn={() => auth.setAuthModal("login")} />, document.body)}
+    </>
   );
 };
 
