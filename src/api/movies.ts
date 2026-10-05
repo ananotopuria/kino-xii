@@ -1,6 +1,7 @@
 import { apiClient } from "./client";
 import type {
   MoviesResponse,
+  MoviesWithSynopsisResponse,
   MovieDetailsResponse,
   MovieSessionsResponse,
   MovieNotificationResponse,
@@ -28,8 +29,16 @@ export const searchMovies = async (
   return response.data.data;
 };
 
-export const getNowPlaying = async (): Promise<MoviesResponse> => {
-  const response = await apiClient.get<MoviesResponse>("/movies/now-playing");
+export const getFeaturedMovies = async (
+  signal?: AbortSignal,
+): Promise<MoviesWithSynopsisResponse> => {
+  const response = await apiClient.get<MoviesWithSynopsisResponse>("/movies/featured", { signal });
+
+  return response.data;
+};
+
+export const getNowPlaying = async (): Promise<MoviesWithSynopsisResponse> => {
+  const response = await apiClient.get<MoviesWithSynopsisResponse>("/movies/now-playing");
 
   return response.data;
 };

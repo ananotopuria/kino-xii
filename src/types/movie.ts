@@ -39,6 +39,14 @@ export type MoviesResponse = {
   data: Movie[];
 };
 
+export type MovieWithSynopsis = Movie & {
+  synopsis: string;
+};
+
+export type MoviesWithSynopsisResponse = {
+  data: MovieWithSynopsis[];
+};
+
 export type MovieNotificationResponse = {
   data: {
     movieId: number;

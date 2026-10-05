@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useNowPlaying } from "../../features/auth/movies/useNowPlaying";
 import MovieCard from "./MovieCard";
 
@@ -19,12 +20,12 @@ const NowPlaying = () => {
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-bold uppercase">Now Playing</h2>
 
-        <button
-          type="button"
+        <Link
+          to="/sessions"
           className="cursor-pointer text-sm font-medium text-[#FF3217]"
         >
           See all
-        </button>
+        </Link>
       </div>
 
       <div className="flex gap-4 overflow-hidden">
