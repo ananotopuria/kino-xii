@@ -114,6 +114,7 @@ test('profile prefills API data, locks email, and derives the notice from API ag
   assert(html.includes('You are 15, you can buy tickets for age ratings 12+'));
   assert(!html.includes('you can buy tickets for all age ratings'));
   assert(!html.includes('Complete your profile to book tickets'));
+  assert(/<button type="submit" disabled=""/.test(html), 'unchanged profile must not be saved');
   const incomplete = { ...user, profileComplete: false };
   assert(renderWithUser(Form, incomplete, query, { user: incomplete, requestLogin() {} }).includes('Complete your profile to book tickets'));
   query.clear();

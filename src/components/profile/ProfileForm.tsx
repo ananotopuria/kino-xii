@@ -3,39 +3,58 @@ import type { ProfileFields, User } from "../../types/auth";
 import { useProfile } from "../../features/profile/useProfile";
 import { useFilterOptions } from "../../features/auth/filters/useFilterOptions";
 import { bookingError } from "../../utils/booking";
+import { normalizeProfileFields, profileFieldsFromUser, profileFormState, validateAvatar } from "../../utils/formValidation";
 
-const fieldsFromUser = (user: User): ProfileFields => ({
-  fullName: user.fullName ?? "", mobileNumber: user.mobileNumber ?? "",
-  dateOfBirth: user.dateOfBirth ?? "", preferredVenueId: user.preferredVenue?.id.toString() ?? "",
-});
 type Props = { user: User; requestLogin: (retry: () => Promise<void>) => void };
 const control = "h-11 w-full rounded-xl border border-[#2a2c3d] bg-[#1e2031] px-4 text-sm outline-none focus:border-white/60 disabled:opacity-60";
 
 const ProfileForm = ({ user, requestLogin }: Props) => {
   const options = useFilterOptions();
   const save = useProfile();
-  const [fields, setFields] = useState(() => fieldsFromUser(user));
+  const [fields, setFields] = useState(() => profileFieldsFromUser(user));
+  const [baseline, setBaseline] = useState(() => profileFieldsFromUser(user));
   const [avatar, setAvatar] = useState<{ file: File; preview: string } | null>(null);
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [avatarError, setAvatarError] = useState("");
+  const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
+  const [edited, setEdited] = useState<Record<string, boolean>>({});
+  const form = profileFormState({ ...fields, avatar: avatar?.file }, baseline, avatarError);
+  const errors = { ...Object.fromEntries(Object.entries(form.errors).filter(([name]) => edited[name])), ...serverErrors };
   const [notice, setNotice] = useState("");
   const [saved, setSaved] = useState(false);
   const upload = useRef<HTMLInputElement>(null);
   const locked = useRef(false);
   useEffect(() => () => { if (avatar) URL.revokeObjectURL(avatar.preview); }, [avatar]);
 
+  const clearFieldError = (name: keyof ProfileFields) => {
+    setServerErrors((current) => {
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
+    setEdited((current) => ({ ...current, [name]: true }));
+    setSaved(false); setNotice("");
+  };
+  const changeField = (name: Exclude<keyof ProfileFields, "avatar">, value: string) => {
+    setFields((current) => ({ ...current, [name]: value }));
+    clearFieldError(name);
+  };
+
   const submit = async (request: ProfileFields) => {
-    if (locked.current) return;
+    if (locked.current || !profileFormState(request, baseline, avatarError).canSave) return;
     locked.current = true;
-    setErrors({}); setNotice(""); setSaved(false);
+    setServerErrors({}); setNotice(""); setSaved(false);
     try {
-      const updated = await save.mutateAsync(request);
-      setFields(fieldsFromUser(updated));
+      const updated = await save.mutateAsync(normalizeProfileFields(request));
+      const next = profileFieldsFromUser(updated);
+      setFields(next);
+      setBaseline(next);
       setAvatar(null);
+      setAvatarError(""); setEdited({}); setServerErrors({});
       if (upload.current) upload.current.value = "";
       setSaved(true);
     } catch (error) {
       const failure = bookingError(error);
-      setErrors(failure.errors ?? {});
+      setServerErrors(failure.errors ?? {});
       setNotice(failure.message ?? "Unable to save your profile. Please try again.");
       if (failure.status === 401) requestLogin(() => submit(request));
     } finally { locked.current = false; }
@@ -61,11 +80,11 @@ const ProfileForm = ({ user, requestLogin }: Props) => {
               <label htmlFor="profile-avatar" className="block text-sm font-semibold">Profile photo</label>
               <input ref={upload} id="profile-avatar" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" aria-invalid={Boolean(errors.avatar)} aria-describedby="avatar-help profile-avatar-error" className="block w-full max-w-64 text-xs file:mr-3 file:cursor-pointer file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:font-semibold file:text-white" onChange={(event) => {
                 const file = event.target.files?.[0];
-                setSaved(false);
                 if (!file) return;
-                const message = !["image/jpeg", "image/png", "image/webp"].includes(file.type) || !/\.(jpe?g|png|webp)$/i.test(file.name)
-                  ? "Choose a JPG, JPEG, PNG or WebP image." : file.size > 2 * 1024 * 1024 ? "Choose an image no larger than 2MB." : "";
-                setErrors((current) => ({ ...current, avatar: message ? [message] : [] }));
+                clearFieldError("avatar");
+                const result = validateAvatar(file);
+                const message = result === true ? "" : result;
+                setAvatarError(message);
                 if (message) { event.target.value = ""; setAvatar(null); return; }
                 setAvatar({ file, preview: URL.createObjectURL(file) });
               }} />
@@ -77,7 +96,7 @@ const ProfileForm = ({ user, requestLogin }: Props) => {
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
             <label htmlFor="profile-fullName" className="mb-2.5 block text-xs font-semibold">Full name *</label>
-            <input id="profile-fullName" autoComplete="name" required className={control} value={fields.fullName} onChange={(event) => { setFields({ ...fields, fullName: event.target.value }); setSaved(false); }} aria-invalid={Boolean(errors.fullName)} aria-describedby="profile-fullName-error" />
+            <input id="profile-fullName" autoComplete="name" required className={control} value={fields.fullName} onChange={(event) => changeField("fullName", event.target.value)} aria-invalid={Boolean(errors.fullName)} aria-describedby="profile-fullName-error" />
             {fieldErrors("fullName")}
           </div>
           <div>
@@ -87,17 +106,17 @@ const ProfileForm = ({ user, requestLogin }: Props) => {
           </div>
           <div>
             <label htmlFor="profile-mobileNumber" className="mb-2.5 block text-xs font-semibold">Mobile number *</label>
-            <input id="profile-mobileNumber" type="tel" autoComplete="tel-national" required placeholder="599 123 456" className={control} value={fields.mobileNumber} onChange={(event) => { setFields({ ...fields, mobileNumber: event.target.value }); setSaved(false); }} aria-invalid={Boolean(errors.mobileNumber)} aria-describedby="profile-mobileNumber-error" />
+            <input id="profile-mobileNumber" type="tel" autoComplete="tel-national" required placeholder="599 123 456" className={control} value={fields.mobileNumber} onChange={(event) => changeField("mobileNumber", event.target.value)} aria-invalid={Boolean(errors.mobileNumber)} aria-describedby="profile-mobileNumber-error" />
             {fieldErrors("mobileNumber")}
           </div>
           <div>
             <label htmlFor="profile-dateOfBirth" className="mb-2.5 block text-xs font-semibold">Date of birth *</label>
-            <input id="profile-dateOfBirth" type="date" autoComplete="bday" required className={`${control} scheme-dark`} value={fields.dateOfBirth} onChange={(event) => { setFields({ ...fields, dateOfBirth: event.target.value }); setSaved(false); }} aria-invalid={Boolean(errors.dateOfBirth)} aria-describedby="profile-dateOfBirth-error" />
+            <input id="profile-dateOfBirth" type="date" autoComplete="bday" required className={`${control} scheme-dark`} value={fields.dateOfBirth} onChange={(event) => changeField("dateOfBirth", event.target.value)} aria-invalid={Boolean(errors.dateOfBirth)} aria-describedby="profile-dateOfBirth-error" />
             {fieldErrors("dateOfBirth")}
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="profile-preferredVenueId" className="mb-2.5 block text-xs font-semibold">Preferred venue</label>
-            <select id="profile-preferredVenueId" className={control} value={fields.preferredVenueId} disabled={!options.data} onChange={(event) => { setFields({ ...fields, preferredVenueId: event.target.value }); setSaved(false); }} aria-invalid={Boolean(errors.preferredVenueId)} aria-describedby="profile-preferredVenueId-error">
+            <select id="profile-preferredVenueId" className={control} value={fields.preferredVenueId} disabled={!options.data} onChange={(event) => changeField("preferredVenueId", event.target.value)} aria-invalid={Boolean(errors.preferredVenueId)} aria-describedby="profile-preferredVenueId-error">
               <option value="">{options.isPending ? "Loading venues..." : "No preference"}</option>
               {!options.data && user.preferredVenue && <option value={user.preferredVenue.id}>{user.preferredVenue.name}</option>}
               {options.data?.venues.map((venue) => <option key={venue.id} value={venue.id}>{venue.name} · {venue.city}</option>)}
@@ -110,7 +129,7 @@ const ProfileForm = ({ user, requestLogin }: Props) => {
       {user.age !== null && <p className="rounded-xl bg-[#4ade80]/10 p-4 text-sm text-[#4ade80]">{allRatings ? `You are ${user.age}, you can buy tickets for all age ratings` : `You are ${user.age}${ratings?.length ? `, you can buy tickets for age ratings ${ratings.filter((rating) => user.age! >= rating.minAge).map((rating) => rating.code).join(", ")}` : "."}`}</p>}
       {notice && <p role="alert" className="text-sm text-[#ff725a]">{notice}</p>}
       {saved && <p role="status" className="text-sm text-[#4ade80]">Profile saved.</p>}
-      <button type="submit" disabled={save.isPending} className="cursor-pointer rounded-full bg-[#ec3013] px-6 py-3 text-sm font-extrabold hover:bg-[#d92b11] disabled:cursor-wait disabled:opacity-50">{save.isPending ? "Saving..." : "Save changes"}</button>
+      <button type="submit" disabled={save.isPending || !form.canSave} className="cursor-pointer rounded-full bg-[#ec3013] px-6 py-3 text-sm font-extrabold hover:bg-[#d92b11] disabled:cursor-wait disabled:opacity-50">{save.isPending ? "Saving..." : "Save changes"}</button>
     </form>
   </section>;
 };
