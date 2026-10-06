@@ -49,6 +49,15 @@ export const sessionsQuery = (params: SessionsParams) => {
   return query;
 };
 
+export const clearSessionsFilters = (params: SessionsParams): SessionsParams => ({
+  ...params,
+  venues: [],
+  formats: [],
+  languages: [],
+  bands: [],
+  page: 1,
+});
+
 export const paginationItems = (current: number, last: number): (number | string)[] => {
   const pages = new Set([1, last, current - 1, current, current + 1]);
   if (current <= 2) pages.add(3);

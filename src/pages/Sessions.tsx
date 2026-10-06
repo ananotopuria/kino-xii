@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import SessionsFilters from "../components/sessions/SessionsFilters";
+import SessionsSkeleton from "../components/sessions/SessionsSkeleton";
 import SessionCard from "../components/movie/SessionCard";
 import { useFilterOptions } from "../features/auth/filters/useFilterOptions";
 import { useSessions } from "../features/auth/movies/useSessions";
 import type { SessionFilterKey, SessionsParams } from "../types/sessions";
 import {
   availableFormats,
-  localDate,
+  clearSessionsFilters,
   paginationItems,
   readSessionsParams,
   sessionsQuery,
@@ -58,22 +59,18 @@ const Sessions = () => {
         ? params[key].filter((item) => item !== value)
         : [...params[key], value],
     });
-  const clear = () =>
-    setQuery(
-      sessionsQuery({
-        date: localDate(),
-        venues: [],
-        formats: [],
-        languages: [],
-        bands: [],
-        search: "",
-        sort: "time_asc",
-        page: 1,
-      }),
-    );
-  const meta = sessions.data?.meta;
+  const clear = () => setQuery(sessionsQuery(clearSessionsFilters(params)));
+  const resultsReady =
+    Boolean(filters.data) &&
+    currentQuery === normalized &&
+    !filters.isError &&
+    sessions.isSuccess;
+  const meta = resultsReady ? sessions.data.meta : undefined;
   const loading =
-    filters.isLoading || (Boolean(filters.data) && sessions.isPending);
+    filters.isLoading ||
+    (!filters.isError &&
+      Boolean(filters.data) &&
+      (currentQuery !== normalized || sessions.isPending));
 
   return (
     <div className="min-h-screen bg-[#070c1c] px-4 pt-44 pb-24 text-white sm:px-8 sm:pt-40 lg:px-12.75 lg:pt-[117.5px] lg:pb-40">
@@ -139,27 +136,29 @@ const Sessions = () => {
                 </label>
               )}
             </div>
-            {sessions.isError && (
+            {loading && <SessionsSkeleton />}
+            {!loading && sessions.isError && (
               <p role="alert" className="text-sm text-red-400">
                 Failed to load sessions.{" "}
                 <button
                   type="button"
+                  disabled={sessions.isFetching}
                   onClick={() => {
                     void sessions.refetch();
                   }}
                   className="cursor-pointer underline"
                 >
-                  Try again
+                  {sessions.isFetching ? "Retrying..." : "Retry"}
                 </button>
               </p>
             )}
-            {sessions.isSuccess && sessions.data.data.length === 0 && (
+            {resultsReady && sessions.data.data.length === 0 && (
               <p role="status" className="py-8 text-sm text-[#a9a9a9]">
                 No sessions match your filters.
               </p>
             )}
             <div className="space-y-8">
-              {sessions.data?.data.map(({ movie, sessions: movieSessions }) => (
+              {resultsReady && sessions.data.data.map(({ movie, sessions: movieSessions }) => (
                 <article
                   key={movie.id}
                   className="min-w-0 border-b border-[#2a2c3d] pb-8 last:border-0 last:pb-0"

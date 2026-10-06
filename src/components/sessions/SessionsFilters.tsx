@@ -33,7 +33,7 @@ const SessionsFilters = ({ options, isLoading, isError, onRetry, params, onToggl
   );
 
   return (
-    <aside aria-label="Session filters" className="flex w-full shrink-0 flex-col gap-6 self-start rounded-2xl bg-[#1e2031] p-6 lg:w-80">
+    <aside aria-label="Session filters" className="flex w-full shrink-0 flex-col gap-6 self-start rounded-2xl bg-[#1e2031] p-6 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)] lg:w-80 lg:overflow-y-auto">
       <h2 className="text-lg font-extrabold leading-none">Filters</h2>
       {isLoading && <p role="status" className="text-sm text-[#a9a9a9]">Loading filters...</p>}
       {isError && <div role="alert" className="text-sm text-red-400">Failed to load filters. <button type="button" onClick={onRetry} className="cursor-pointer underline">Try again</button></div>}
