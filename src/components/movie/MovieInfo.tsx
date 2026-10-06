@@ -20,6 +20,11 @@ const MovieInfo = ({ movie }: MovieInfoProps) => {
           <p className="mt-1">{movie.cast}</p>
         </div>
 
+        {movie.genres.length > 0 && <div>
+          <p className="text-xs uppercase text-white/40">Genres</p>
+          <p className="mt-1">{movie.genres.map((genre) => genre.name).join(", ")}</p>
+        </div>}
+
         <div>
           <p className="text-xs uppercase text-white/40">Duration</p>
           <p className="mt-1">{movie.runtimeMinutes} minutes</p>

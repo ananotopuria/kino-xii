@@ -6,6 +6,7 @@ import MovieInfo from "../components/movie/MovieInfo";
 import MovieSessions from "../components/movie/MovieSessions";
 import { useMovie } from "../features/auth/movies/useMovie";
 import { recordRecentlyViewed } from "../features/movies/recentlyViewed";
+import { nextSevenDates } from "../utils/sessionFilters";
 
 const MovieDetails = ({ movieSlug }: { movieSlug?: string }) => {
   const { slug = "" } = useParams<{ slug: string }>();
@@ -41,7 +42,8 @@ const MovieDetails = ({ movieSlug }: { movieSlug?: string }) => {
     );
   }
 
-  const activeDate = selectedDate || movie.availableDates[0] || "";
+  const dates = nextSevenDates();
+  const activeDate = dates.includes(selectedDate) ? selectedDate : dates[0];
 
   return (
     <main className="min-h-screen bg-[#020817] text-white">
@@ -51,7 +53,7 @@ const MovieDetails = ({ movieSlug }: { movieSlug?: string }) => {
         <MovieSessions
           slug={movie.slug}
           minAge={movie.ageRating.minAge}
-          dates={movie.availableDates}
+          dates={dates}
           selectedDate={activeDate}
           onSelectDate={setSelectedDate}
         />

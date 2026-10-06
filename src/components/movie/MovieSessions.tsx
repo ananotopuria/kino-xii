@@ -22,6 +22,7 @@ const MovieSessions = ({
     data: sessionsByVenue,
     isLoading,
     isError,
+    refetch,
   } = useMovieSessions(slug, selectedDate);
 
   return (
@@ -39,21 +40,21 @@ const MovieSessions = ({
       />
 
       {isLoading && (
-        <p className="mt-8 text-sm text-white/50">Loading sessions...</p>
+        <p role="status" className="mt-8 text-sm text-white/50">Loading sessions...</p>
       )}
 
       {isError && (
-        <p className="mt-8 text-sm text-red-400">Failed to load sessions.</p>
+        <p role="alert" className="mt-8 text-sm text-red-400">Failed to load sessions. <button type="button" onClick={() => void refetch()} className="cursor-pointer underline">Retry</button></p>
       )}
 
-      {!isLoading && !isError && sessionsByVenue?.length === 0 && (
-        <p className="mt-8 text-sm text-white/50">
+      {!isLoading && !isError && sessionsByVenue?.every((group) => group.sessions.length === 0) && (
+        <p role="status" className="mt-8 text-sm text-white/50">
           No sessions available for this date.
         </p>
       )}
 
       <div className="mt-8 space-y-8">
-        {sessionsByVenue?.map((group) => {
+        {!isLoading && !isError && sessionsByVenue?.filter((group) => group.sessions.length > 0).map((group) => {
           const sessionsByHall = groupSessionsByHall(group.sessions);
 
           return (

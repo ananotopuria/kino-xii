@@ -4,6 +4,14 @@ import type { SessionsParams } from "../types/sessions";
 export const localDate = (date = new Date()) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
+export const nextSevenDates = (base = new Date()): string[] =>
+  Array.from({ length: 7 }, (_, offset) => {
+    // Local noon and calendar arithmetic avoid UTC shifts and 23/25-hour days.
+    const date = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 12);
+    date.setDate(date.getDate() + offset);
+    return localDate(date);
+  });
+
 export const readSessionsParams = (query: URLSearchParams): SessionsParams => {
   const date = query.get("date") ?? "";
   const parsed = new Date(`${date}T12:00:00`);

@@ -7,8 +7,8 @@ type DatePickerProps = {
 const DatePicker = ({ dates, selectedDate, onSelect }: DatePickerProps) => {
   return (
     <div className="mt-6 flex gap-2">
-      {dates.slice(0, 7).map((date) => {
-        const parsedDate = new Date(`${date}T00:00:00`);
+      {dates.map((date) => {
+        const parsedDate = new Date(`${date}T12:00:00`);
 
         const day = parsedDate.toLocaleDateString("en-US", {
           weekday: "short",
@@ -22,6 +22,8 @@ const DatePicker = ({ dates, selectedDate, onSelect }: DatePickerProps) => {
           <button
             key={date}
             type="button"
+            aria-pressed={isActive}
+            aria-label={parsedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
             onClick={() => onSelect(date)}
             className={`flex h-20 w-18 cursor-pointer flex-col items-center justify-center rounded-xl transition ${
               isActive ? "bg-[#EC3013]" : "bg-white/10 hover:bg-white/15"
