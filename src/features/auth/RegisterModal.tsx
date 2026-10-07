@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Upload } from "lucide-react";
 
@@ -9,6 +9,8 @@ import {
   registerSchema,
   type RegisterFormData,
 } from "./schemas/registerSchema";
+import { validateAvatar } from "../../utils/formValidation";
+import { useAuthFormFeedback } from "./useAuthFormFeedback";
 
 type RegisterModalProps = {
   onClose: () => void;
@@ -19,7 +21,7 @@ type RegisterModalProps = {
 const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
   const { signUp } = useAuth();
 
-  const [apiError, setApiError] = useState("");
+  const { serverErrors, apiError, clearFieldError, showError, submit } = useAuthFormFeedback("register");
   const [avatar, setAvatar] = useState<File | undefined>();
   const [avatarPreview, setAvatarPreview] = useState("");
   const [avatarError, setAvatarError] = useState("");
@@ -27,23 +29,16 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
   const {
     register,
     handleSubmit,
-    control,
-    formState: { errors, isSubmitting, touchedFields, isValid },
+    formState: { errors: clientErrors, isSubmitting, touchedFields },
   } = useForm<RegisterFormData>({
     resolver: yupResolver(registerSchema),
-    mode: "onChange",
+    mode: "onTouched",
   });
 
-  const [username, email, password, confirmPassword] = useWatch({
-    control,
-    name: ["username", "email", "password", "confirmPassword"],
-  });
-
-  const isFormFilled =
-    Boolean(username) &&
-    Boolean(email) &&
-    Boolean(password) &&
-    Boolean(confirmPassword);
+  const errors = {
+    ...clientErrors,
+    ...Object.fromEntries(Object.entries(serverErrors).map(([field, message]) => [field, { message }])),
+  };
 
   useEffect(() => {
     return () => {
@@ -60,26 +55,23 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
       return;
     }
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
-    if (!allowedTypes.includes(file.type)) {
-      setAvatarError("Avatar must be JPG, PNG or WEBP");
+    clearFieldError("avatar");
+    const validation = validateAvatar(file);
+    if (validation !== true) {
+      setAvatarError(validation);
+      setAvatar(undefined);
+      setAvatarPreview("");
       event.target.value = "";
       return;
     }
 
     setAvatarError("");
     setAvatar(file);
-
-    if (avatarPreview) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-
     setAvatarPreview(URL.createObjectURL(file));
   };
 
   const onSubmit = async (data: RegisterFormData) => {
-    setApiError("");
+    if (avatarError) return;
 
     try {
       await signUp({
@@ -91,8 +83,8 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
       });
 
       (onSuccess ?? onClose)();
-    } catch {
-      setApiError("Registration failed. Please try again.");
+    } catch (error) {
+      showError(error);
     }
   };
 
@@ -170,7 +162,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6">
+        <form onSubmit={submit(handleSubmit(onSubmit))} noValidate className="mt-6">
           {/* AVATAR */}
           <div>
             <label className="flex w-fit cursor-pointer items-center gap-3">
@@ -199,7 +191,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
                 </p>
 
                 <p className="mt-1 text-[10px] text-[#A9A9A9]">
-                  JPG, PNG or WEBP
+                  JPG, PNG or WEBP, maximum 2 MB
                 </p>
               </div>
 
@@ -211,7 +203,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
               />
             </label>
 
-            <p className="mt-1 min-h-4 text-xs text-[#EC3013]">{avatarError}</p>
+            <p className="mt-1 min-h-4 text-xs text-[#EC3013]">{avatarError || serverErrors.avatar}</p>
           </div>
 
           {/* USERNAME */}
@@ -229,7 +221,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
               <input
                 id="username"
                 type="text"
-                {...register("username")}
+                {...register("username", { onChange: () => clearFieldError("username") })}
                 placeholder="User"
                 className={getInputClass(
                   Boolean(errors.username),
@@ -260,7 +252,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
               <input
                 id="register-email"
                 type="email"
-                {...register("email")}
+                {...register("email", { onChange: () => clearFieldError("email") })}
                 placeholder="example@gmail.com"
                 className={getInputClass(
                   Boolean(errors.email),
@@ -293,7 +285,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
                 <input
                   id="register-password"
                   type="password"
-                  {...register("password")}
+                  {...register("password", { onChange: () => clearFieldError("password") })}
                   placeholder="••••••••"
                   className={getInputClass(
                     Boolean(errors.password),
@@ -324,7 +316,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
                 <input
                   id="confirm-password"
                   type="password"
-                  {...register("confirmPassword")}
+                  {...register("confirmPassword", { onChange: () => clearFieldError("confirmPassword") })}
                   placeholder="••••••••"
                   className={getInputClass(
                     Boolean(errors.confirmPassword),
@@ -351,7 +343,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
           <button
             type="submit"
             disabled={
-              isSubmitting || !isFormFilled || !isValid || Boolean(avatarError)
+              isSubmitting || Boolean(avatarError)
             }
             className="
               mt-4 w-full rounded-full

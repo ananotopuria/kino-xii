@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 import Modal from "../../components/common/Modal";
 import { useAuth } from "./useAuth";
 import { loginSchema, type LoginFormData } from "./schemas/loginSchema";
+import { useAuthFormFeedback } from "./useAuthFormFeedback";
 
 type LoginModalProps = {
   onClose: () => void;
@@ -14,25 +14,28 @@ type LoginModalProps = {
 
 const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
   const { signIn } = useAuth();
-  const [apiError, setApiError] = useState("");
+  const { serverErrors, apiError, clearFieldError, showError, submit } = useAuthFormFeedback("login");
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, touchedFields },
+    formState: { errors: clientErrors, isSubmitting, touchedFields },
   } = useForm<LoginFormData>({
     resolver: yupResolver(loginSchema),
     mode: "onBlur",
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    setApiError("");
+  const errors = {
+    ...clientErrors,
+    ...Object.fromEntries(Object.entries(serverErrors).map(([field, message]) => [field, { message }])),
+  };
 
+  const onSubmit = async (data: LoginFormData) => {
     try {
       await signIn(data);
       (onSuccess ?? onClose)();
-    } catch {
-      setApiError("Invalid email or password");
+    } catch (error) {
+      showError(error);
     }
   };
 
@@ -67,7 +70,7 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6" noValidate>
+        <form onSubmit={submit(handleSubmit(onSubmit))} className="mt-6" noValidate>
           <div className="space-y-6">
             {/* EMAIL */}
             <div>
@@ -84,7 +87,7 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
                 <input
                   id="email"
                   type="email"
-                  {...register("email")}
+                  {...register("email", { onChange: () => clearFieldError("email") })}
                   placeholder="example@gmail.com"
                   className={`
                     h-10 w-full rounded-xl border
@@ -147,7 +150,7 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
                 <input
                   id="password"
                   type="password"
-                  {...register("password")}
+                  {...register("password", { onChange: () => clearFieldError("password") })}
                   placeholder="••••••••"
                   className={`
                     h-10 w-full rounded-xl border
