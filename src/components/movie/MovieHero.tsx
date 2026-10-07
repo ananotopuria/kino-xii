@@ -23,7 +23,7 @@ const MovieHero = ({ movie }: MovieHeroProps) => {
 
         <div className="max-w-xl pb-4">
           <span className="text-xs font-semibold uppercase text-[#EC3013]">
-            Now Playing
+            {movie.isComingSoon ? "Coming Soon" : "Now Playing"}
           </span>
 
           <h1 className="mt-4 text-4xl font-bold uppercase">{movie.title}</h1>

@@ -1,10 +1,12 @@
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import LoginModal from "../../features/auth/LoginModal";
 import RegisterModal from "../../features/auth/RegisterModal";
 import { useAuth } from "../../features/auth/useAuth";
 import { useNotifyMovie } from "../../features/auth/movies/useNotifyMovie";
 import type { Movie } from "../../types/movie";
+
+import { useAuthReplay } from "../../features/auth/useAuthReplay";
 
 type ComingSoonCardProps = {
   movie: Movie;
@@ -13,13 +15,14 @@ type ComingSoonCardProps = {
 const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
   const { user } = useAuth();
   const notify = useNotifyMovie();
-  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
+  const auth = useAuthReplay<string>(async (slug) => { if (slug === movie.slug) await subscribe(); });
+  const { authModal, setAuthModal, cancelAuth: closeAuth } = auth;
   const [notice, setNotice] = useState("");
-  const pendingSlug = useRef<string | null>(null);
   const locked = useRef(false);
 
-  const subscribe = async () => {
+  async function subscribe() {
     if (!movie.isComingSoon || locked.current) return;
+    if (!user) { auth.requestLogin(movie.slug); return; }
     locked.current = true;
     setNotice("");
     try {
@@ -27,8 +30,7 @@ const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
     } catch (error) {
       if (isAxiosError<{ message?: string }>(error)) {
         if (error.response?.status === 401) {
-          pendingSlug.current = movie.slug;
-          setAuthModal("login");
+          auth.requestLogin(movie.slug);
           return;
         }
         setNotice(error.response?.data?.message ?? (error.response?.status === 404
@@ -40,20 +42,7 @@ const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
     } finally {
       locked.current = false;
     }
-  };
-
-  const resume = useEffectEvent(async () => {
-    if (!user || !pendingSlug.current) return;
-    const slug = pendingSlug.current;
-    pendingSlug.current = null;
-    if (slug === movie.slug) await subscribe();
-  });
-  useEffect(() => { void resume(); }, [user]);
-
-  const closeAuth = () => {
-    pendingSlug.current = null;
-    setAuthModal(null);
-  };
+  }
 
   const releaseDate = new Date(movie.releaseDate).toLocaleDateString("en-US", {
     month: "short",
@@ -93,14 +82,14 @@ const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
             aria-live="polite"
             className="cursor-pointer rounded-full border border-white/20 px-5 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
           >
-            {movie.isNotified || notify.isSuccess ? "Notified" : "Notify Me"}
+            {notify.isPending ? "Subscribing..." : movie.isNotified || notify.isSuccess ? "Notified" : "Notify Me"}
           </button>}
         </div>
         {notice && <p role="alert" className="mt-2 text-xs font-semibold text-[#EC3013]">{notice}</p>}
       </div>
     </article>
-    {authModal === "login" && <LoginModal onClose={closeAuth} onSuccess={() => setAuthModal(null)} onSignUp={() => setAuthModal("signup")} />}
-    {authModal === "signup" && <RegisterModal onClose={closeAuth} onSuccess={() => setAuthModal(null)} onLogIn={() => setAuthModal("login")} />}
+    {authModal === "login" && <LoginModal onClose={closeAuth} onSuccess={auth.authenticated} onSignUp={() => setAuthModal("signup")} />}
+    {authModal === "signup" && <RegisterModal onClose={closeAuth} onSuccess={auth.authenticated} onLogIn={() => setAuthModal("login")} />}
     </>
   );
 };

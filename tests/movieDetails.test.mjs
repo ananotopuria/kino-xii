@@ -141,7 +141,7 @@ test('Movie Details starts at today and renders all seven days even when availab
   query.setQueryData(['movie-sessions', movie.slug, dates[0]], []);
   query.setQueryData(['movie-sessions', movie.slug, '2026-10-07'], [group]);
   for (const availableDates of [movie.availableDates, []]) {
-    query.setQueryData(['movie', movie.slug], { ...movie, availableDates });
+    query.setQueryData(['movie', movie.slug, null], { ...movie, availableDates });
     const html = render(MovieDetails, query, { movieSlug: movie.slug });
     assert.equal((html.match(/aria-pressed=/g) ?? []).length, 7);
     assert(html.includes('aria-pressed="true" aria-label="Monday, October 5, 2026"'));
@@ -184,7 +184,7 @@ test('failed session requests offer Retry and hide cached session groups until r
 test('Coming Soon details respect the API empty sessions response without fabricating cards', (context) => {
   context.mock.timers.enable({ apis: ['Date'], now: new Date(2026, 9, 5, 10).getTime() });
   const query = makeQuery();
-  query.setQueryData(['movie', movie.slug], { ...movie, isComingSoon: true, availableDates: [] });
+  query.setQueryData(['movie', movie.slug, null], { ...movie, isComingSoon: true, availableDates: [] });
   query.setQueryData(['movie-sessions', movie.slug, dates[0]], []);
   const html = render(MovieDetails, query, { movieSlug: movie.slug });
   assert(html.includes('No sessions available for this date.'));

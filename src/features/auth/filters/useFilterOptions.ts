@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getFilterOptions } from "../../../api/filterOptions";
 
-export const useFilterOptions = () => {
-  return useQuery({
-    queryKey: ["filter-options"],
-    queryFn: getFilterOptions,
-    staleTime: Infinity,
-  });
-};
+export const filterOptionsQuery = queryOptions({
+  queryKey: ["filter-options"],
+  queryFn: getFilterOptions,
+  staleTime: Infinity,
+  gcTime: Infinity,
+});
+
+export const useFilterOptions = () => useQuery(filterOptionsQuery);

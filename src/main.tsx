@@ -8,6 +8,10 @@ import { queryClient } from "./lib/queryClient";
 import { AuthProvider } from "./features/auth/AuthProvider";
 import "./index.css";
 
+import { filterOptionsQuery } from "./features/auth/filters/useFilterOptions";
+
+void queryClient.prefetchQuery(filterOptionsQuery);
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
