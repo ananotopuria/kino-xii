@@ -5,7 +5,6 @@ import { canSelectSeat } from "../../utils/seatSelection";
 type SeatMapProps = {
   map: SeatMapData;
   selectedIds: Set<number>;
-  atLimit: boolean;
   disabled: boolean;
   onToggle: (seat: Seat) => void;
 };
@@ -15,7 +14,7 @@ const HeldPattern = ({ small = false }: { small?: boolean }) => (
     className="pointer-events-none absolute top-1/2 left-1/2 max-w-none -translate-x-1/2 -translate-y-1/2 rotate-[-37.44deg]" />
 );
 
-const SeatMap = ({ map, selectedIds, atLimit, disabled, onToggle }: SeatMapProps) => (
+const SeatMap = ({ map, selectedIds, disabled, onToggle }: SeatMapProps) => (
   <div className="flex min-w-0 flex-col gap-8 py-5">
     <div className="mx-5 flex h-7.5 items-center justify-center rounded-b-[20px] bg-[#2a2c3d] text-xs font-semibold">SCREEN</div>
     {map.sections.map((section, sectionIndex) => (
@@ -34,7 +33,7 @@ const SeatMap = ({ map, selectedIds, atLimit, disabled, onToggle }: SeatMapProps
                   return <Fragment key={seat.id}>
                     {seat.state === "unavailable" ? <span aria-hidden="true" className="size-13 shrink-0" /> : (
                       <button type="button" aria-label={`Seat ${seat.code}, ${selected ? "selected" : seat.isMine ? "held by you" : seat.state}`}
-                        aria-pressed={selected} disabled={disabled || blocked || (atLimit && !selected)}
+                        aria-pressed={selected} disabled={disabled || blocked}
                         onClick={() => onToggle(seat)}
                         className={`relative flex size-13 shrink-0 items-center justify-center overflow-hidden rounded-[10px] text-sm font-extrabold shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed ${
                           selected ? "bg-[#ec3013] text-white" : seat.state === "sold" ? "bg-[#1e2031] text-[#505261]" : seat.state === "held" && !seat.isMine ? "bg-[#1e2031] text-[#a9a9a9]" : "cursor-pointer border border-[#505261] bg-[#1e2031] text-white enabled:hover:border-white"

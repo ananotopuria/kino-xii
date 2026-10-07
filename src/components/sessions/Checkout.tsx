@@ -75,7 +75,7 @@ const Checkout = ({ session, hold, user, busy, submitting, errors: serverErrors,
             <div className="border-t border-[#2a2c3d]" />
             <div className="flex justify-between gap-3"><span className="text-[#a9a9a9]">Seats</span><span className="text-right font-semibold">{hold.seats.map((seat) => seat.code).join(", ")}</span></div>
             <div className="flex justify-between gap-3"><span className="text-[#a9a9a9]">Tickets</span><span className="text-right">{ticketSummary(hold.seats)}</span></div>
-            <ul className="sr-only">{hold.seats.map((seat) => <li key={seat.seatId}>{seat.code}: {seat.ticketType.name}, ₾{money(seat.price)}</li>)}</ul>
+            <ul aria-label="Seat ticket types" className="space-y-2 break-words">{hold.seats.map((seat) => <li key={seat.seatId}>Seat {seat.code} — {seat.ticketType.name}, ₾{money(seat.price)}</li>)}</ul>
           </div>
         </div>
         <div className="space-y-3 pt-2.5">

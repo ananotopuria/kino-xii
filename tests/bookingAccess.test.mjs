@@ -103,6 +103,7 @@ test('eligible users still create/replace holds, return to seats, and submit the
   await booking.proceed();
   const fields = { fullName: 'Viewer', email: user.email, mobileNumber: '599123456', cardNumber: '4242424242424242', expiry: '09/30', cvv: '123' };
   await booking.pay(fields);
+  assert.equal(sessionStorage.getItem("kino:hold:4:42"), null, "completed orders clear the unpaid hold before confirmation can close");
   assert.deepEqual(calls, [
     { method: 'post', url: '/sessions/42/holds', body: { seats: [{ seatId: 11, ticketType: 'adult' }] } },
     { method: 'post', url: '/sessions/42/holds', body: { seats: [{ seatId: 11, ticketType: 'adult' }] } },

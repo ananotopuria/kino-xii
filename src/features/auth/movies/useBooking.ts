@@ -5,7 +5,7 @@ import { getHold } from "../../../api/booking";
 import type { CheckoutFields, Order, SeatHold } from "../../../types/booking";
 import type { FilterOptions } from "../../../types/filterOptions";
 import type { SeatMap, SeatSelection, SessionDetails } from "../../../types/sessions";
-import { bookingError, bookingStorageKey, dropContested, HOLD_EXPIRED, holdSelection, remainingSeconds } from "../../../utils/booking";
+import { bookingError, bookingStorageKey, dropContested, HOLD_EXPIRED, holdValidationErrors, holdSelection, remainingSeconds } from "../../../utils/booking";
 import { eligibleTicketTypes, reconcileSelection, seatsInMap } from "../../../utils/seatSelection";
 import { useAuth } from "../useAuth";
 import { useAuthReplay } from "../useAuthReplay";
@@ -26,6 +26,7 @@ export const useBooking = ({ session, map, options }: Props) => {
   const [notice, setNotice] = useState("");
   const [profileRequired, setProfileRequired] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [seatErrors, setSeatErrors] = useState<Record<number, string[]>>({});
   const [seconds, setSeconds] = useState(0);
   const [restoredFor, setRestoredFor] = useState(() =>
     user && sessionStorage.getItem(bookingStorageKey(session.id, user.id)) ? "" : ownerKey);
@@ -90,6 +91,7 @@ export const useBooking = ({ session, map, options }: Props) => {
     setSelection([]);
     setStep("seats");
     setFieldErrors({});
+    setSeatErrors({});
     setNotice(message);
     void refreshSeats();
   };
@@ -101,6 +103,11 @@ export const useBooking = ({ session, map, options }: Props) => {
   function changeSelection(next: SeatSelection[]) {
     if (!user) { requestLogin({ kind: "selection", selection: next }); return; }
     if (user.profileComplete !== true) { requireProfile(); return; }
+    setSeatErrors((previous) => Object.fromEntries(Object.entries(previous).filter(([id]) => {
+      const before = selection.find((seat) => seat.seatId === Number(id));
+      const after = next.find((seat) => seat.seatId === Number(id));
+      return before && after && before.ticketTypeId === after.ticketTypeId;
+    })));
     setSelection(next);
   }
 
@@ -164,7 +171,7 @@ export const useBooking = ({ session, map, options }: Props) => {
     };
   }, []);
 
-  const recover = async (error: unknown, action: PendingAction) => {
+  const recover = async (error: unknown, action: PendingAction, submitted: SeatSelection[] = []) => {
     const failure = bookingError(error);
     const message = failure.message ?? "Unable to complete this booking action. Please try again.";
     setNotice(message);
@@ -176,6 +183,7 @@ export const useBooking = ({ session, map, options }: Props) => {
       setSelection(retained);
       setStep("seats");
       setFieldErrors({});
+      setSeatErrors({});
       setNotice(`${message}${contested.length ? ` ${contested.join(", ")}` : ""}`);
       // Mark the contested codes immediately, then reconcile with the live map.
       queryClient.setQueriesData<SeatMap>({ queryKey: ["session-seats", session.id] }, (cached) => cached && ({
@@ -188,7 +196,11 @@ export const useBooking = ({ session, map, options }: Props) => {
       await refreshSeats();
     } else if (failure.status === 422 && failure.errors) {
       setFieldErrors(failure.errors);
-      if (action.kind !== "order") setNotice([message, ...Object.values(failure.errors).flat()].join(" "));
+      if (action.kind === "hold") {
+        const validation = holdValidationErrors(failure.errors, submitted, map);
+        setSeatErrors(validation.seatErrors);
+        setNotice([message, ...validation.general].join(" "));
+      } else if (action.kind !== "order") setNotice([message, ...Object.values(failure.errors).flat()].join(" "));
     } else if (failure.status === 422 && action.kind === "order") {
       expire(message);
     } else if (failure.status === 422 && !failure.errors && /expired/i.test(message)) {
@@ -211,6 +223,7 @@ export const useBooking = ({ session, map, options }: Props) => {
     setNotice("");
     setProfileRequired(false);
     setFieldErrors({});
+    setSeatErrors({});
     try {
       const next = await mutations.createHold.mutateAsync({ seats: currentSelection.map((seat) => ({
         seatId: seat.seatId, ticketType: types.find((type) => type.id === seat.ticketTypeId)!.slug,
@@ -218,7 +231,7 @@ export const useBooking = ({ session, map, options }: Props) => {
       if (remainingSeconds(next) === 0) expire();
       else { acceptHold(next); await refreshSeats(); }
     } catch (error) {
-      await recover(error, { kind: "hold" });
+      await recover(error, { kind: "hold" }, currentSelection);
     } finally {
       actionLock.current = false;
     }
@@ -281,7 +294,7 @@ export const useBooking = ({ session, map, options }: Props) => {
   useEffect(() => { if (blocker.state === "blocked") void leave(); }, [blocker.state]);
 
   return {
-    hold, order, step, notice, profileRequired, fieldErrors, seconds, restoring, restoreFailed, busy,
+    hold, order, step, notice, profileRequired, fieldErrors, seatErrors, seconds, restoring, restoreFailed, busy,
     selection: currentSelection, setSelection: changeSelection, proceed, pay,
     creatingHold: mutations.createHold.isPending,
     submittingOrder: mutations.createOrder.isPending,

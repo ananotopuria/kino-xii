@@ -34,7 +34,7 @@ const BookingFlow = ({ session, map, options, disabled, onAuthVisibility }: Prop
       {booking.notice && <p role="alert" className="mb-5 rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-400">{booking.notice}{booking.profileRequired && <> <Link to="/profile" state={{ bookingMessage: booking.notice, returnTo: `/sessions/${session.id}` }} className="underline">Complete your profile</Link></>}</p>}
       {booking.restoring ? <p role="status" className="py-12 text-sm text-[#a9a9a9]">Restoring your booking...</p> : booking.restoreFailed ? <button type="button" onClick={booking.retryRestore} className="cursor-pointer text-sm underline">Retry restoring held seats</button> : booking.step === "checkout" && booking.hold && user?.profileComplete === true ? (
         <Checkout key={booking.hold.holdId} session={session} hold={booking.hold} user={user} busy={booking.busy || booking.seconds === 0} submitting={booking.submittingOrder} errors={booking.fieldErrors} onBack={booking.backToSeats} onPay={booking.pay} />
-      ) : <SeatSelection session={session} map={map} options={options} disabled={disabled || booking.busy} selection={booking.selection} onChange={booking.setSelection} onContinue={() => { void booking.proceed(); }} creatingHold={booking.creatingHold} />}
+      ) : <SeatSelection session={session} map={map} options={options} disabled={disabled || booking.busy} selection={booking.selection} onChange={booking.setSelection} onContinue={() => { void booking.proceed(); }} creatingHold={booking.creatingHold} seatErrors={booking.seatErrors} />}
       {booking.releasingHold && <p role="status" className="mt-4 text-sm text-[#a9a9a9]">Releasing your seats...</p>}
     </div>
     <BookingAuth modal={booking.authModal} onVisibility={onAuthVisibility}>

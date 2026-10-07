@@ -19,7 +19,10 @@ const RefundDialog = ({ order, busy, error, onClose, onConfirm }: { order: Order
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     }}>
-      <h2 id="refund-title" className="text-xl font-extrabold">Refund tickets?</h2>
+      <div className="flex items-start justify-between gap-4">
+        <h2 id="refund-title" className="text-xl font-extrabold">Refund tickets?</h2>
+        <button type="button" onClick={onClose} disabled={busy} aria-label="Close refund dialog" className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-2xl leading-none hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-50">×</button>
+      </div>
       <p id="refund-description" className="mt-3 text-sm leading-relaxed text-[#a9a9a9]">Refund all tickets for {order.session.movie.title}, order #{order.reference}. This action cannot be undone.</p>
       <p className="mt-5 flex justify-between text-sm"><span>Refund amount</span><strong>₾ {money(order.totalPrice)}</strong></p>
       {error && <p role="alert" className="mt-4 text-sm text-[#ff725a]">{error}</p>}

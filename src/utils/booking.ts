@@ -38,3 +38,20 @@ export const ticketSummary = (tickets: { ticketType: { slug: string; name: strin
 export const bookingStorageKey = (sessionId: number, userId: number) => `kino:hold:${userId}:${sessionId}`;
 export const money = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 2 });
 export const shortSessionDate = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
+
+// Field paths index the submitted seats array, never the map's row order.
+export const holdValidationErrors = (
+  errors: Record<string, string[]>, submitted: SeatSelection[], map: SeatMap,
+) => {
+  const seatErrors: Record<number, string[]> = {};
+  const general: string[] = [];
+  const knownIds = new Set(map.sections.flatMap((section) => section.rows.flatMap((row) => row.seats.map((seat) => seat.id))));
+  for (const [field, messages] of Object.entries(errors)) {
+    const match = /^seats\.(0|[1-9]\d*)(?:\.(seatId|ticketType))?$/.exec(field);
+    const seat = match ? submitted[Number(match[1])] : undefined;
+    if (seat && knownIds.has(seat.seatId)) {
+      seatErrors[seat.seatId] = [...(seatErrors[seat.seatId] ?? []), ...messages];
+    } else general.push(...messages);
+  }
+  return { seatErrors, general };
+};

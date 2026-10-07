@@ -68,7 +68,9 @@ const SessionDetails = () => {
             }
           }}
           className="relative max-h-[calc(100dvh-32px)] w-[min(1146px,calc(100vw-32px))] overflow-y-auto rounded-[28px] bg-[#070c1c] p-5 text-white shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)] outline-none sm:p-8">
-          <button type="button" onClick={close} className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:right-2 focus:rounded-full focus:bg-[#2a2c3d] focus:px-3 focus:py-2">Close seat selection</button>
+          <div className="mb-3 flex justify-end">
+            <button type="button" onClick={close} disabled={authOpen} aria-label="Close booking" className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-2xl leading-none hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed">×</button>
+          </div>
           {(notFound || loading || !session.data || !seats.data || !options.data) && <h1 id="session-title" className="mb-8 text-xl font-extrabold">Seat selection</h1>}
           {notFound ? <p role="alert" className="py-12 text-sm text-red-400">Session not found.</p> : error ? (
             <p role="alert" className="py-12 text-sm text-red-400">Unable to load session seats. <button type="button" onClick={retry} className="cursor-pointer underline">Try again</button></p>

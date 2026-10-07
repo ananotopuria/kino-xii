@@ -21,6 +21,7 @@ const TicketCard = ({ order, onRefund }: { order: Order; onRefund: (order: Order
       <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Order</dt><dd className="break-all text-right">#{order.reference}</dd></div>
       <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Seats</dt><dd className="text-right font-semibold">{order.tickets.map((ticket) => ticket.seatCode).join(", ")}</dd></div>
       <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Tickets</dt><dd className="text-right">{ticketSummary(order.tickets)}</dd></div>
+      <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Seat ticket types</dt><dd className="min-w-0 text-right"><ul className="space-y-2 break-words">{order.tickets.map((ticket) => <li key={ticket.id}>Seat {ticket.seatCode} — {ticket.ticketType.name}</li>)}</ul></dd></div>
       <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Payment card</dt><dd>•••• {order.cardLastFour}</dd></div>
       <div className="flex items-center justify-between gap-4 border-t border-[#2a2c3d] pt-4"><dt className="text-[#a9a9a9]">{order.status === "refunded" ? "TOTAL REFUNDED" : "TOTAL PAID"}</dt><dd className="text-lg font-extrabold">₾ {money(order.totalPrice)}</dd></div>
     </dl>
