@@ -38,6 +38,32 @@ const render = (component, query, props = {}) => renderToStaticMarkup(
       React.createElement(MemoryRouter, null, React.createElement(component, props)))));
 const sessionProps = date => ({ slug: movie.slug, minAge: 12, dates, selectedDate: date, onSelectDate() {} });
 
+test('movie details distinguish 404 from network/server errors and Retry recovers the same movie query', async () => {
+  const queryKey = ['movie', movie.slug, null];
+  for (const status of [404, 500, undefined]) {
+    const query = makeQuery();
+    const failure = { isAxiosError: true, response: status ? { status } : undefined };
+    await assert.rejects(query.fetchQuery({ queryKey, queryFn: async () => { throw failure; } }));
+    let tree;
+    function Capture() { tree = MovieDetails({ movieSlug: movie.slug }); return tree; }
+    const html = render(Capture, query);
+    assert.equal(html.includes('Movie not found.'), status === 404);
+    assert.equal(html.includes('Unable to load this movie.'), status !== 404);
+    assert(html.includes('Retry'));
+    let calls = 0;
+    client.defaults.adapter = async config => {
+      calls++;
+      assert.equal(config.url, `/movies/${movie.slug}`);
+      return { data: { data: movie }, status: 200, headers: {}, config };
+    };
+    React.Children.toArray(tree.props.children).find(child => child.type === 'button').props.onClick();
+    await query.fetchQuery({ queryKey });
+    assert.equal(calls, 1);
+    assert.deepEqual(query.getQueryData(queryKey), movie);
+    query.clear();
+  }
+});
+
 test('the selector generates exactly today plus six calendar days without mutating the base date', () => {
   const base = new Date(2026, 9, 5, 23, 59);
   const original = base.getTime();

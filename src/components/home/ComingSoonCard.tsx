@@ -51,14 +51,14 @@ const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
 
   return (
     <>
-    <article inert={Boolean(authModal)} className="flex w-117.5 shrink-0 gap-3 rounded-[20px] bg-[#1E2031] p-3">
+    <article inert={Boolean(authModal)} className="flex w-[min(470px,100%)] shrink-0 gap-3 rounded-[20px] bg-[#1E2031] p-3">
       <img
         src={movie.posterUrl}
         alt={movie.title}
         className="h-34 w-25 shrink-0 rounded-[14px] object-cover"
       />
 
-      <div className="flex flex-1 flex-col justify-between py-1">
+      <div className="flex min-w-0 flex-1 flex-col justify-between break-words py-1">
         <div>
           <h3 className="text-lg font-extrabold text-white">{movie.title}</h3>
 
@@ -71,7 +71,7 @@ const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
           </span>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs font-semibold text-white">{releaseDate}</p>
 
           {movie.isComingSoon && <button

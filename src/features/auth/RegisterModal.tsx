@@ -137,15 +137,15 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
     <Modal onClose={onClose}>
       <div
         className="
-          relative w-119
+          relative w-[min(476px,calc(100vw-32px))] max-h-[calc(100dvh-32px)] overflow-y-auto break-words
           rounded-[28px]
           border border-[#2A2C3D]
           bg-[#070C1C]
-          p-8 text-white
+          p-5 text-white sm:p-8
         "
       >
         {/* HEADER */}
-        <div className="flex items-start justify-between">
+        <div className="sticky top-0 z-10 flex items-start justify-between bg-[#070C1C]">
           <div>
             <h2 className="text-xl font-extrabold leading-none">Sign up</h2>
 
@@ -156,7 +156,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
             type="button"
             onClick={onClose}
             aria-label="Close registration modal"
-            className="cursor-pointer text-2xl leading-none text-white"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-2xl leading-none text-white focus-visible:outline-2 focus-visible:outline-white"
           >
             ×
           </button>
@@ -269,7 +269,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
           </div>
 
           {/* PASSWORDS */}
-          <div className="mt-2 grid grid-cols-2 gap-3">
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {/* PASSWORD */}
             <div>
               <label

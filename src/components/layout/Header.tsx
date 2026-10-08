@@ -17,7 +17,6 @@ const Header = ({ onLogin, onSignUp }: HeaderProps) => {
   const { pathname, key: locationKey } = useLocation();
   const [query, setQuery] = useSearchParams();
   const isSessions = pathname === "/sessions";
-  const compact = isSessions || pathname === "/profile";
   const [searchText, setSearchText] = useState("");
   const [openForLocation, setOpenForLocation] = useState<string | null>(null);
   const searchContainer = useRef<HTMLDivElement>(null);
@@ -46,7 +45,7 @@ const Header = ({ onLogin, onSignUp }: HeaderProps) => {
 
   return (
     <header className="absolute left-0 top-0 z-20 w-full">
-      <div className={compact ? "flex flex-wrap items-center gap-y-4 px-4 pt-7.5 pb-10 sm:px-8 lg:flex-nowrap lg:px-15" : "flex items-center px-15 pt-7.5 pb-10"}>
+      <div className="flex flex-wrap items-center gap-y-4 px-4 pt-7.5 pb-10 sm:px-8 lg:flex-nowrap lg:px-15">
         {/* Logo */}
         <Link to="/" className="shrink-0 cursor-pointer">
           <span className="text-[22px] font-bold text-white">
@@ -63,9 +62,9 @@ const Header = ({ onLogin, onSignUp }: HeaderProps) => {
         </Link>
 
         {/* Right side */}
-        <div className={compact ? "ml-auto flex w-full flex-wrap items-center gap-4 sm:w-auto lg:flex-nowrap" : "ml-auto flex items-center gap-4"}>
+        <div className="ml-auto flex w-full min-w-0 flex-wrap items-center gap-4 sm:w-auto lg:flex-nowrap">
           {/* Search */}
-          <div ref={searchContainer} className={compact ? "relative min-w-0 flex-1 sm:flex-none lg:mr-4" : "relative mr-4"} onBlur={(event) => {
+          <div ref={searchContainer} className="relative min-w-0 flex-1 sm:flex-none lg:mr-4" onBlur={(event) => {
             if (!isSessions && !event.currentTarget.contains(event.relatedTarget)) setOpenForLocation(null);
           }}>
             <Search
@@ -104,26 +103,14 @@ const Header = ({ onLogin, onSignUp }: HeaderProps) => {
               placeholder="Search films and live events"
               style={!isSessions ? { paddingRight: 44 } : undefined}
               {...(!isSessions ? { "data-header-search": true } : {})}
-              className={compact ? "h-11 w-full rounded-full bg-white/15 pl-11 pr-5 text-sm text-white outline-none placeholder:text-white/80 focus:bg-white/20 sm:w-60 xl:w-100" : `
-                h-11
-                w-100
-                rounded-full
-                bg-white/15
-                pl-11
-                pr-5
-                text-sm
-                text-white
-                outline-none
-                placeholder:text-white/80
-                focus:bg-white/20
-              `}
+              className="h-11 w-full rounded-full bg-white/15 pl-11 pr-5 text-sm text-white outline-none placeholder:text-white/80 focus:bg-white/20 sm:w-60 xl:w-100"
             />
             {!isSessions && searchText && <button type="button" aria-label="Clear search" onClick={() => {
               setSearchText("");
               searchInput.current?.focus();
               setOpenForLocation(locationKey);
             }} className="absolute right-2.5 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"><X size={14} /></button>}
-            {searchOpen && <div id="header-search-results" aria-label="Search results" role="region" className="absolute left-0 right-0 top-full mt-1 max-h-[min(32rem,70vh)] overflow-y-auto rounded-2xl border border-[#2a2c3d] bg-[#070c1c] text-white shadow-[0_12px_32px_rgba(0,0,0,0.25)]">
+            {searchOpen && <div id="header-search-results" aria-label="Search results" role="region" className="absolute left-0 right-0 top-full mt-1 w-[calc(100vw-2rem)] sm:w-auto max-h-[min(32rem,70vh)] overflow-y-auto rounded-2xl border border-[#2a2c3d] bg-[#070c1c] text-white shadow-[0_12px_32px_rgba(0,0,0,0.25)]">
               {!searchText.trim() || (!search.isLoading && !search.error && search.data?.length === 0) ? <div className="flex min-h-[228px] flex-col items-center justify-center px-5 py-8 text-center">
                 <span className="mb-4 flex size-11 items-center justify-center rounded-full bg-white/10">
                   {searchText.trim() ? <Search size={20} strokeWidth={1.5} /> : <Popcorn size={20} />}

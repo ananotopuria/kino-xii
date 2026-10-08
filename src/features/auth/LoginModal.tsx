@@ -43,15 +43,15 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
     <Modal onClose={onClose}>
       <div
         className="
-          relative w-100.75 rounded-[28px]
+          relative w-[min(403px,calc(100vw-32px))] max-h-[calc(100dvh-32px)] overflow-y-auto break-words rounded-[28px]
           border border-[#2A2C3D]
-          bg-[#070C1C] p-8
+          bg-[#070C1C] p-5 sm:p-8
           text-white
           shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)]
         "
       >
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="sticky top-0 z-10 flex items-start justify-between bg-[#070C1C]">
           <div>
             <h2 className="text-xl font-extrabold leading-none">Log in</h2>
 
@@ -64,7 +64,7 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
             type="button"
             onClick={onClose}
             aria-label="Close login modal"
-            className="cursor-pointer text-2xl leading-none text-white"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-2xl leading-none text-white focus-visible:outline-2 focus-visible:outline-white"
           >
             ×
           </button>

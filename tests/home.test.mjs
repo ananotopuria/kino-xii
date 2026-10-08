@@ -6,13 +6,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-let server, api, client, Hero, NowPlaying;
+let server, api, client, Hero, NowPlaying, ComingSoon, AuthContext;
 before(async () => {
   server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
   api = await server.ssrLoadModule('/src/api/movies.ts');
   ({ apiClient: client } = await server.ssrLoadModule('/src/api/client.ts'));
   ({ default: Hero } = await server.ssrLoadModule('/src/components/home/Hero.tsx'));
   ({ default: NowPlaying } = await server.ssrLoadModule('/src/components/home/NowPlaying.tsx'));
+  ({ default: ComingSoon } = await server.ssrLoadModule('/src/components/home/ComingSoon.tsx'));
+  ({ AuthContext } = await server.ssrLoadModule('/src/features/auth/AuthContext.ts'));
   globalThis.localStorage = { getItem: () => null };
 });
 after(async () => { await server?.close(); delete globalThis.localStorage; });
@@ -25,9 +27,81 @@ const movie = (id) => ({
 });
 const render = (component, query) => renderToStaticMarkup(
   React.createElement(QueryClientProvider, { client: query },
-    React.createElement(MemoryRouter, null, React.createElement(component))),
+    React.createElement(AuthContext.Provider, { value: { user: null, isLoading: false } },
+      React.createElement(MemoryRouter, null, React.createElement(component)))),
 );
 const queryClient = () => new QueryClient({ defaultOptions: { queries: { retry: false, retryOnMount: false } } });
+
+for (const catalogue of ['now-playing', 'coming-soon']) {
+  test(`${catalogue} distinguishes loading/empty/error and Retry refetches its own endpoint`, async () => {
+    const query = queryClient();
+    const Component = catalogue === 'now-playing' ? NowPlaying : ComingSoon;
+    const queryKey = catalogue === 'now-playing' ? ['movies', catalogue] : ['movies', catalogue, null];
+    assert(render(Component, query).includes('Loading movies...'));
+    query.setQueryData(queryKey, { data: [] });
+    const empty = render(Component, query);
+    assert(empty.includes(catalogue === 'now-playing' ? 'No movies are playing' : 'No upcoming movies'));
+    await assert.rejects(query.fetchQuery({ queryKey, queryFn: async () => { throw new Error('Offline'); } }));
+    let tree;
+    function Capture() { tree = Component(); return tree; }
+    const failed = render(Capture, query);
+    assert(failed.includes('Unable to load') && failed.includes('Retry'));
+    let calls = 0;
+    client.defaults.adapter = async config => {
+      calls++;
+      assert.equal(config.url, `/movies/${catalogue}`);
+      return { data: { data: [movie(99)] }, status: 200, headers: {}, config };
+    };
+    const retry = React.Children.toArray(tree.props.children).find(child => child.type === 'button');
+    retry.props.onClick();
+    await query.fetchQuery({ queryKey });
+    assert.equal(calls, 1);
+    assert(render(Component, query).includes('API Film 99'));
+    query.clear();
+  });
+}
+
+test('catalogue rows retain every returned movie, including titles beyond the first six', () => {
+  const query = queryClient();
+  const movies = Array.from({ length: 9 }, (_, index) => movie(index + 1));
+  query.setQueryData(['movies', 'now-playing'], { data: movies });
+  query.setQueryData(['movies', 'coming-soon', null], { data: movies });
+  for (const Component of [NowPlaying, ComingSoon]) {
+    const html = render(Component, query);
+    assert.equal((html.match(/<article/g) ?? []).length, 9);
+    assert(html.includes('API Film 9'));
+  }
+  query.clear();
+});
+
+test('Coming Soon expands and collapses in place while retaining movie cards and Notify Me', () => {
+  const query = queryClient();
+  query.setQueryData(['movies', 'coming-soon', null], { data: [1, 2, 3].map(id => ({
+    ...movie(id), isComingSoon: true, releaseDate: '2030-01-01',
+  })) });
+  function findToggle(node) {
+    if (!React.isValidElement(node)) return;
+    if (node.props['aria-controls'] === 'coming-soon-movies') return node;
+    return React.Children.toArray(node.props.children).map(findToggle).find(Boolean);
+  }
+  for (const clicks of [0, 1, 2]) {
+    let remaining = clicks;
+    function Capture() {
+      const tree = ComingSoon();
+      // Exercise the real handler through React's render-phase state updates,
+      // without introducing a DOM or browser dependency for this toggle.
+      if (remaining > 0) { remaining--; findToggle(tree).props.onClick(); }
+      return tree;
+    }
+    const html = render(Capture, query);
+    assert(html.includes(`aria-expanded="${clicks === 1}"`));
+    assert(html.includes(clicks === 1 ? 'Show less' : 'See all'));
+    assert.equal((html.match(/<article/g) ?? []).length, 3);
+    assert.equal((html.match(/Notify Me/g) ?? []).length, 3);
+    assert(!html.includes('href="/coming-soon"'));
+  }
+  query.clear();
+});
 
 test('featured and now-playing use their API endpoints and preserve synopsis and prices', async () => {
   const signal = new AbortController().signal;

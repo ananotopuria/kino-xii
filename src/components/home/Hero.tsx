@@ -41,13 +41,13 @@ const FeaturedPreview = ({ movies }: { movies: MovieWithSynopsis[] }) => {
       <div className="absolute inset-0 bg-linear-to-t from-[#020817] via-transparent to-transparent" />
 
       {/* Overlapping cells reserve the tallest slide's space to prevent rotation layout shifts. */}
-      <div className="relative z-10 grid min-h-170 items-center px-15 pt-25 pb-24">
+      <div className="relative z-10 grid min-h-170 items-center px-4 pt-44 pb-24 sm:px-8 sm:pt-25 lg:px-15">
         {movies.map((movie, index) => (
           <div
             key={movie.id}
             aria-hidden={index !== activeIndex}
             inert={index !== activeIndex}
-            className={`col-start-1 row-start-1 max-w-155 transition-opacity duration-700 motion-reduce:transition-none ${index === activeIndex ? "opacity-100" : "pointer-events-none opacity-0"}`}
+            className={`col-start-1 row-start-1 min-w-0 max-w-155 break-words transition-opacity duration-700 motion-reduce:transition-none ${index === activeIndex ? "opacity-100" : "pointer-events-none opacity-0"}`}
           >
             <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#FF3217]">Featured · Now Playing</p>
             <h1 className="text-5xl font-extrabold uppercase leading-none text-white">{movie.title}</h1>
@@ -59,7 +59,7 @@ const FeaturedPreview = ({ movies }: { movies: MovieWithSynopsis[] }) => {
               ))}
             </div>
             {movie.synopsis && <p className="mt-5 max-w-140 text-sm leading-6 text-white/75">{movie.synopsis}</p>}
-            <div className="mt-7 flex items-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link to={`/movies/${encodeURIComponent(movie.slug)}`} className="rounded-full bg-[#FF3217] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#E82B13]">Buy tickets</Link>
               <Link to="/sessions" className="rounded-full bg-white/15 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/25">All sessions</Link>
             </div>

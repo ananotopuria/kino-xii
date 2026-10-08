@@ -14,14 +14,14 @@ const MovieHero = ({ movie }: MovieHeroProps) => {
     >
       <div className="absolute inset-0 bg-black/40" />
 
-      <div className="relative z-10 flex min-h-140 items-end gap-8 px-15 pb-10 pt-32">
+      <div className="relative z-10 flex min-h-140 flex-col items-start gap-8 px-4 pb-10 pt-44 sm:flex-row sm:items-end sm:px-8 sm:pt-32 lg:px-15">
         <img
           src={movie.posterUrl}
           alt={movie.title}
-          className="h-91.25 w-62.5 rounded-xl object-cover"
+          className="h-91.25 w-62.5 max-w-full shrink-0 rounded-xl object-cover"
         />
 
-        <div className="max-w-xl pb-4">
+        <div className="min-w-0 max-w-xl break-words pb-4">
           <span className="text-xs font-semibold uppercase text-[#EC3013]">
             {movie.isComingSoon ? "Coming Soon" : "Now Playing"}
           </span>
@@ -32,7 +32,7 @@ const MovieHero = ({ movie }: MovieHeroProps) => {
             {movie.synopsis}
           </p>
 
-          <div className="mt-5 flex items-center gap-3 text-xs">
+          <div className="mt-5 flex flex-wrap items-center gap-3 text-xs">
             <span className="rounded-full bg-[#EC3013]/20 px-3 py-1 text-[#EC3013]">
               {movie.ageRating.code}
             </span>
