@@ -12,3 +12,12 @@ body {
 input[data-header-search]::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
+
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

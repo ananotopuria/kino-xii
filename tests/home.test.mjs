@@ -168,3 +168,58 @@ test('Now Playing exposes details links, Sessions See All, real synopsis, and un
   assert(html.includes('₾14.5') && !html.includes('€'));
   query.clear();
 });
+
+function findElement(node, predicate) {
+  if (!React.isValidElement(node)) return;
+  if (predicate(node)) return node;
+  return React.Children.toArray(node.props.children).map(child => findElement(child, predicate)).find(Boolean);
+}
+
+test('hero previous/next wrap and keep the active slide and progress synchronized', () => {
+  const query = queryClient();
+  query.setQueryData(['movies', 'featured'], { data: [1, 2, 3].map(movie) });
+  for (const [direction, clicks, expected] of [['Previous', 1, 3], ['Next', 1, 2], ['Next', 3, 1]]) {
+    let remaining = clicks;
+    function Capture() {
+      const preview = Hero();
+      const tree = preview.type(preview.props);
+      if (remaining > 0) {
+        remaining--;
+        findElement(tree, node => node.props['aria-label'] === `${direction} featured movie`).props.onClick();
+      }
+      return tree;
+    }
+    const html = render(Capture, query);
+    assert(html.includes(`Featured movie ${expected} of 3`));
+    const active = html.match(/<div aria-hidden="false"[\s\S]*?<\/h1>/)?.[0];
+    assert(active?.includes(`API Film ${expected}`));
+    assert.equal((html.match(/inert=""/g) ?? []).length, 2);
+  }
+  query.clear();
+});
+
+test('Now Playing pointer and keyboard activation expand exactly one card and preserve movie links', () => {
+  const query = queryClient();
+  query.setQueryData(['movies', 'now-playing'], { data: [1, 2, 3].map(movie) });
+  for (const interaction of ['initial', 'mouse', 'focus', 'touch']) {
+    let activated = false;
+    function Capture() {
+      const tree = NowPlaying();
+      if (!activated && interaction !== 'initial') {
+        activated = true;
+        const card = findElement(tree, node => node.props.movie?.id === 3);
+        const article = card.type(card.props);
+        if (interaction === 'focus') article.props.onFocus();
+        else article.props.onPointerEnter({ pointerType: interaction });
+      }
+      return tree;
+    }
+    const html = render(Capture, query);
+    const activeId = ['mouse', 'focus'].includes(interaction) ? 3 : 1;
+    assert.equal((html.match(/lg:w-117.5/g) ?? []).length, 1);
+    assert(html.includes(`srcSet="/backdrop-${activeId}.webp"`));
+    assert.equal((html.match(/<article/g) ?? []).length, 3);
+    for (const id of [1, 2, 3]) assert(html.includes(`href="/movies/film%2F${id}"`));
+  }
+  query.clear();
+});

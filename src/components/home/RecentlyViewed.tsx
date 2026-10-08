@@ -2,7 +2,11 @@ import { Link } from "react-router-dom";
 import type { RecentlyViewedMovie } from "../../features/movies/recentlyViewed";
 import { useRecentlyViewed } from "../../features/movies/useRecentlyViewed";
 
-export const RecentlyViewedCard = ({ movie }: { movie: RecentlyViewedMovie }) => (
+export const RecentlyViewedCard = ({
+  movie,
+}: {
+  movie: RecentlyViewedMovie;
+}) => (
   <Link
     to={`/movies/${encodeURIComponent(movie.slug)}`}
     className="flex h-22 w-82.5 shrink-0 items-center gap-3 rounded-2xl bg-[#1E2031] p-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
@@ -31,12 +35,25 @@ const RecentlyViewed = () => {
   if (movies.length === 0) return null;
 
   return (
-    <section aria-labelledby="recently-viewed-heading" className="border-b border-[#2A2C3D] px-15 py-10">
-      <h2 id="recently-viewed-heading" className="mb-5 text-2xl font-extrabold text-white">
+    <section
+      aria-labelledby="recently-viewed-heading"
+      className="border-b border-[#2A2C3D] px-15 py-10"
+    >
+      <h2
+        id="recently-viewed-heading"
+        className="mb-5 text-2xl font-extrabold text-white"
+      >
         Recently viewed
       </h2>
-      <div className="flex gap-5 overflow-x-auto">
-        {movies.map((movie) => <RecentlyViewedCard key={movie.id} movie={movie} />)}
+      <div
+        role="region"
+        aria-label="Recently viewed movies"
+        tabIndex={0}
+        className="hide-scrollbar flex gap-5 overflow-x-auto pb-2 focus-visible:outline-2 focus-visible:outline-white"
+      >
+        {movies.map((movie) => (
+          <RecentlyViewedCard key={movie.id} movie={movie} />
+        ))}
       </div>
     </section>
   );

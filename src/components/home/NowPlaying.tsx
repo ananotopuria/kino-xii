@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNowPlaying } from "../../features/auth/movies/useNowPlaying";
 import MovieCard from "./MovieCard";
 
 const NowPlaying = () => {
+  const [activeMovieId, setActiveMovieId] = useState<number | null>(null);
   const { data, isLoading, isError, isFetching, refetch } = useNowPlaying();
 
   if (isLoading) {
@@ -10,13 +12,25 @@ const NowPlaying = () => {
   }
 
   if (isError) {
-    return <div role="alert" className="px-4 py-10 text-red-500 sm:px-8 lg:px-15">
-      <p>Unable to load now playing movies.</p>
-      <button type="button" disabled={isFetching} onClick={() => void refetch()} className="mt-2 cursor-pointer underline disabled:opacity-50">{isFetching ? "Retrying..." : "Retry"}</button>
-    </div>;
+    return (
+      <div role="alert" className="px-4 py-10 text-red-500 sm:px-8 lg:px-15">
+        <p>Unable to load now playing movies.</p>
+        <button
+          type="button"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+          className="mt-2 cursor-pointer underline disabled:opacity-50"
+        >
+          {isFetching ? "Retrying..." : "Retry"}
+        </button>
+      </div>
+    );
   }
 
   const movies = data?.data ?? [];
+  const activeId = movies.some((movie) => movie.id === activeMovieId)
+    ? activeMovieId
+    : movies[0]?.id;
 
   return (
     <section className="px-4 py-10 sm:px-8 lg:px-15">
@@ -31,11 +45,27 @@ const NowPlaying = () => {
         </Link>
       </div>
 
-      {movies.length === 0 ? <p role="status" className="text-sm text-white/60">No movies are playing right now. Please check back soon.</p> : <div role="region" aria-label="Now playing movies" tabIndex={0} className="flex gap-4 overflow-x-auto pb-2 focus-visible:outline-2 focus-visible:outline-white">
-        {movies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
-        ))}
-      </div>}
+      {movies.length === 0 ? (
+        <p role="status" className="text-sm text-white/60">
+          No movies are playing right now. Please check back soon.
+        </p>
+      ) : (
+        <div
+          role="region"
+          aria-label="Now playing movies"
+          tabIndex={0}
+          className="hide-scrollbar flex items-stretch gap-4 overflow-x-auto p-1 pb-2 focus-visible:outline-2 focus-visible:outline-white"
+        >
+          {movies.map((movie) => (
+            <MovieCard
+              key={movie.id}
+              movie={movie}
+              active={movie.id === activeId}
+              onActivate={() => setActiveMovieId(movie.id)}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 };
