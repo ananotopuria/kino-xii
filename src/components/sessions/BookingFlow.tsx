@@ -21,14 +21,14 @@ const BookingFlow = ({ session, map, options, disabled, onAuthVisibility }: Prop
 
   return <>
     <div inert={Boolean(booking.authModal)}>
-      <header className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 id="session-title" className="text-xl font-extrabold leading-tight uppercase">{session.movie.title}</h1>
+      <header className="mb-8 flex flex-wrap items-start justify-between gap-4 pr-10">
+        <div className="min-w-0 flex-1">
+          <h1 id="session-title" className="text-xl leading-[22px] font-extrabold break-words uppercase">{session.movie.title}</h1>
           <p className="mt-2 text-xs leading-[1.3] text-[#a9a9a9]">{session.venue.name} · Hall {session.hall.name} · {new Date(`${session.date}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" })} · {session.time} · {session.format.name} · {session.language.name}</p>
         </div>
         {booking.hold && <div role="timer" aria-label="Time remaining on seat hold" className="shrink-0 rounded-xl bg-[#1e2031] px-3.5 py-2 text-center">
-          <p className="text-xs font-semibold text-[#a9a9a9]">SEATS HELD</p>
-          <p className="text-sm font-extrabold">{Math.floor(booking.seconds / 60)}:{String(booking.seconds % 60).padStart(2, "0")}</p>
+          <p className="text-xs leading-[15px] font-semibold text-[#a9a9a9]">SEATS HELD</p>
+          <p className="text-sm leading-[15px] font-extrabold tabular-nums">{Math.floor(booking.seconds / 60)}:{String(booking.seconds % 60).padStart(2, "0")}</p>
         </div>}
       </header>
       {booking.notice && <p role="alert" className="mb-5 rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-400">{booking.notice}{booking.profileRequired && <> <Link to="/profile" state={{ bookingMessage: booking.notice, returnTo: `/sessions/${session.id}` }} className="underline">Complete your profile</Link></>}</p>}

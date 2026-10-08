@@ -19,7 +19,7 @@ const SeatMap = ({ map, selectedIds, disabled, onToggle }: SeatMapProps) => (
     <div className="mx-5 flex h-7.5 items-center justify-center rounded-b-[20px] bg-[#2a2c3d] text-xs font-semibold">SCREEN</div>
     {map.sections.map((section, sectionIndex) => (
       <section key={`${section.name}-${sectionIndex}`} aria-label={section.name} className="min-w-0">
-        <h3 className="mb-6 px-5 text-xs font-semibold text-[#a9a9a9] uppercase sm:px-10">
+        <h3 className="mb-6 px-5 text-xs leading-[13px] font-semibold text-[#a9a9a9] uppercase sm:px-10">
           {section.name}{section.rows.length > 0 && ` · Rows ${section.rows[0].label}–${section.rows[section.rows.length - 1].label}`}
         </h3>
         <div role="region" aria-label={`${section.name} seat map`} tabIndex={0} className="overflow-x-auto px-1 pb-1 focus-visible:outline-2 focus-visible:outline-white">
