@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useFeaturedMovies } from "../../features/auth/movies/useFeaturedMovies";
 import type { MovieWithSynopsis } from "../../types/movie";
+import { IoTicket } from "react-icons/io5";
+import { PiTimer } from "react-icons/pi";
 
 const FeaturedPreview = ({ movies }: { movies: MovieWithSynopsis[] }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -51,7 +53,7 @@ const FeaturedPreview = ({ movies }: { movies: MovieWithSynopsis[] }) => {
             inert={index !== activeIndex}
             className={`col-start-1 row-start-1 min-w-0 max-w-155 wrap-break-word transition-opacity duration-700 motion-reduce:transition-none ${index === activeIndex ? "opacity-100" : "pointer-events-none opacity-0"}`}
           >
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#FF3217]">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#EC3013]">
               Featured · Now Playing
             </p>
             <h1 className="text-5xl font-extrabold uppercase leading-none text-white">
@@ -60,13 +62,13 @@ const FeaturedPreview = ({ movies }: { movies: MovieWithSynopsis[] }) => {
             <div className="mt-5 flex flex-wrap items-center gap-3 text-xs font-semibold">
               <span
                 title={movie.ageRating.description}
-                className="rounded-full bg-[#FF3217]/20 px-3 py-1 text-[#FF3217]"
+                className="rounded-full bg-[#EC3013]/20 px-3 py-1 text-[#EC3013]"
               >
                 {movie.ageRating.code}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-black/50 px-3 py-2 text-white backdrop-blur-sm">
-                <Clock3 size={16} aria-hidden="true" />
-                {movie.runtimeMinutes} min
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-white">
+                <PiTimer size={18} aria-hidden="true" />
+                {movie.runtimeMinutes} Min
               </span>
               {movie.formats.map((format) => (
                 <span
@@ -85,9 +87,10 @@ const FeaturedPreview = ({ movies }: { movies: MovieWithSynopsis[] }) => {
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link
                 to={`/movies/${encodeURIComponent(movie.slug)}`}
-                className="rounded-full bg-[#FF3217] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#E82B13]"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#EC3013] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#E82B13]"
               >
-                Buy tickets
+                <IoTicket size={18} />
+                <span>Buy tickets</span>
               </Link>
               <Link
                 to="/sessions"
@@ -109,7 +112,7 @@ const FeaturedPreview = ({ movies }: { movies: MovieWithSynopsis[] }) => {
           {movies.map((movie, index) => (
             <div
               key={movie.id}
-              className={`h-0.75 flex-1 transition-colors duration-700 motion-reduce:transition-none ${index === activeIndex ? "bg-[#FF3217]" : "bg-white/60"}`}
+              className={`h-0.75 flex-1 transition-colors duration-700 motion-reduce:transition-none ${index === activeIndex ? "bg-[#EC3013]" : "bg-white/60"}`}
             />
           ))}
         </div>
@@ -195,7 +198,7 @@ const Hero = () => {
                 type="button"
                 disabled={featured.isFetching}
                 onClick={() => void featured.refetch()}
-                className="cursor-pointer rounded-full bg-[#FF3217] px-6 py-3 text-sm font-semibold disabled:cursor-wait disabled:opacity-50"
+                className="cursor-pointer rounded-full bg-[#EC3013] px-6 py-3 text-sm font-semibold disabled:cursor-wait disabled:opacity-50"
               >
                 {featured.isFetching ? "Retrying..." : "Retry"}
               </button>

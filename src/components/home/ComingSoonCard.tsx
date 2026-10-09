@@ -1,12 +1,14 @@
 import { useRef, useState } from "react";
 import { isAxiosError } from "axios";
+import { MdOutlineNotificationsActive } from "react-icons/md";
+
 import LoginModal from "../../features/auth/LoginModal";
 import RegisterModal from "../../features/auth/RegisterModal";
 import { useAuth } from "../../features/auth/useAuth";
 import { useNotifyMovie } from "../../features/auth/movies/useNotifyMovie";
-import type { Movie } from "../../types/movie";
-
 import { useAuthReplay } from "../../features/auth/useAuthReplay";
+
+import type { Movie } from "../../types/movie";
 
 type ComingSoonCardProps = {
   movie: Movie;
@@ -15,21 +17,27 @@ type ComingSoonCardProps = {
 const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
   const { user } = useAuth();
   const notify = useNotifyMovie();
+
   const auth = useAuthReplay<string>(async (slug) => {
     if (slug === movie.slug) await subscribe();
   });
+
   const { authModal, setAuthModal, cancelAuth: closeAuth } = auth;
+
   const [notice, setNotice] = useState("");
   const locked = useRef(false);
 
   async function subscribe() {
     if (!movie.isComingSoon || locked.current) return;
+
     if (!user) {
       auth.requestLogin(movie.slug);
       return;
     }
+
     locked.current = true;
     setNotice("");
+
     try {
       await notify.mutateAsync(movie.slug);
     } catch (error) {
@@ -38,6 +46,7 @@ const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
           auth.requestLogin(movie.slug);
           return;
         }
+
         setNotice(
           error.response?.data?.message ??
             (error.response?.status === 404
@@ -52,66 +61,82 @@ const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
     }
   }
 
-  const releaseDate = new Date(movie.releaseDate).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  const releaseDate = new Date(movie.releaseDate)
+    .toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+    })
+    .toUpperCase();
+
+  const isNotified = movie.isNotified || notify.isSuccess;
 
   return (
     <>
       <article
         inert={Boolean(authModal)}
-        className="flex w-[min(470px,100%)] shrink-0 gap-3 rounded-[20px] bg-[#1E2031] p-3"
+        className="flex w-[min(395px,90vw)] shrink-0 gap-3 rounded-[20px] bg-[#1E2031] p-3"
       >
+        {/* Movie image */}
         <img
           src={movie.posterUrl}
           alt={movie.title}
-          className="h-34 w-25 shrink-0 rounded-[14px] object-cover"
+          className="h-30 w-47.5 min-w-0 shrink-0 rounded-[14px] object-cover max-sm:w-[42%]"
         />
 
-        <div className="flex min-w-0 flex-1 flex-col justify-between wrap-break-word py-1">
+        {/* Movie information */}
+        <div className="flex min-w-0 flex-1 flex-col justify-between">
           <div>
-            <h3 className="text-lg font-extrabold text-white">{movie.title}</h3>
+            <p className="text-[10px] font-bold uppercase text-[#EC3013]">
+              IN CINEMAS {releaseDate}
+            </p>
 
-            <p className="mt-1 text-xs text-white/60">
+            <h3 className="mt-1 line-clamp-2 text-xs font-semibold text-white">
+              {movie.title}
+            </h3>
+
+            <p className="mt-1 text-[10px] text-white/60">
               {movie.genres[0]?.name ?? "Film"} · {movie.runtimeMinutes} min
             </p>
 
-            <span className="mt-2 inline-block rounded-full bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-500">
+            <span className="mt-1 inline-flex rounded-full bg-[#EC3013]/10 px-2 py-1 text-[10px] font-semibold text-[#EC3013]">
               {movie.ageRating.code}
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold text-white">{releaseDate}</p>
-
+          {/* Notify button */}
+          <div className="mt-3">
             {movie.isComingSoon && (
               <button
                 type="button"
                 onClick={() => void subscribe()}
-                disabled={notify.isPending}
+                disabled={notify.isPending || isNotified}
                 aria-busy={notify.isPending}
-                aria-live="polite"
-                className="cursor-pointer rounded-full border border-white/20 px-5 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+                className="inline-flex w-fit cursor-pointer items-center justify-center gap-1.5 rounded-full border border-white/60 px-3 py-1 text-[10px] font-semibold text-white transition hover:border-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
+                <MdOutlineNotificationsActive size={14} aria-hidden="true" />
+
                 {notify.isPending
                   ? "Subscribing..."
-                  : movie.isNotified || notify.isSuccess
+                  : isNotified
                     ? "Notified"
                     : "Notify Me"}
               </button>
             )}
+
+            {/* Error message */}
+            {notice && (
+              <p
+                role="alert"
+                className="mt-2 text-[10px] font-medium text-[#EC3013]"
+              >
+                {notice}
+              </p>
+            )}
           </div>
-          {notice && (
-            <p
-              role="alert"
-              className="mt-2 text-xs font-semibold text-[#EC3013]"
-            >
-              {notice}
-            </p>
-          )}
         </div>
       </article>
+
+      {/* Login modal */}
       {authModal === "login" && (
         <LoginModal
           onClose={closeAuth}
@@ -119,6 +144,8 @@ const ComingSoonCard = ({ movie }: ComingSoonCardProps) => {
           onSignUp={() => setAuthModal("signup")}
         />
       )}
+
+      {/* Register modal */}
       {authModal === "signup" && (
         <RegisterModal
           onClose={closeAuth}

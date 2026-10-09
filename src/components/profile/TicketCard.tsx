@@ -1,37 +1,163 @@
 import type { Order } from "../../types/booking";
-import { money, shortSessionDate, ticketSummary } from "../../utils/booking";
+import { money, shortSessionDate } from "../../utils/booking";
 
-const TicketCard = ({ order, onRefund }: { order: Order; onRefund: (order: Order) => void }) => {
+type TicketCardProps = {
+  order: Order;
+  onRefund: (order: Order) => void;
+};
+
+const TicketCard = ({ order, onRefund }: TicketCardProps) => {
   const { session } = order;
-  const unavailable = "Refunds are unavailable within 2 hours of the session starting.";
-  return <article className="rounded-xl border border-[#2a2c3d] bg-[#1e2031] p-5">
-    <div className="flex items-start gap-4">
-      <img src={session.movie.posterUrl} alt={session.movie.title} className="h-28 w-20 shrink-0 rounded-lg object-cover" />
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-extrabold uppercase">{session.movie.title}</h3>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status === "refunded" ? "bg-white/10 text-[#a9a9a9]" : "bg-[#4ade80]/10 text-[#4ade80]"}`}>{order.status === "refunded" ? "Refunded" : order.isUpcoming ? "Upcoming" : "Past"}</span>
+
+  const unavailable =
+    "Refunds are unavailable within 2 hours of the session starting.";
+
+  return (
+    <article className="overflow-hidden rounded-3xl bg-[#1E2031] text-white">
+      <div className="flex flex-col lg:flex-row">
+        {/* LEFT SIDE */}
+        <div className="flex min-w-0 flex-1 flex-col gap-5 p-5 sm:flex-row sm:gap-6 sm:p-7">
+          {/* Movie poster */}
+          <img
+            src={session.movie.posterUrl}
+            alt={session.movie.title}
+            className="h-37.5 w-26.25 shrink-0 rounded-xl object-cover"
+          />
+
+          {/* Movie details */}
+          <div className="min-w-0 flex-1">
+            {/* Title and rating */}
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="text-xl font-extrabold text-white">
+                {session.movie.title}
+              </h3>
+
+              <span className="rounded-full bg-[#FF3217]/10 px-2.5 py-1 text-xs font-bold text-[#FF3217]">
+                {session.movie.ageRating.code}
+              </span>
+
+              <span className="text-sm text-[#A9A9A9]">
+                {session.movie.runtimeMinutes} min
+              </span>
+            </div>
+
+            {/* Session details */}
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#A9A9A9]">
+                  Date
+                </p>
+
+                <p className="mt-1 text-sm font-semibold">
+                  {shortSessionDate(session.date)} · {session.time}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#A9A9A9]">
+                  Venue
+                </p>
+
+                <p className="mt-1 text-sm font-semibold">
+                  {session.venue.name} · Hall {session.hall.name}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#A9A9A9]">
+                  Format
+                </p>
+
+                <p className="mt-1 text-sm font-semibold">
+                  {session.format.name} · {session.language.name}
+                </p>
+              </div>
+            </div>
+
+            {/* Seats */}
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-[#A9A9A9]">
+                Seats
+              </span>
+
+              {order.tickets.map((ticket) => (
+                <span
+                  key={ticket.id}
+                  className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
+                >
+                  {ticket.seatCode} · {ticket.ticketType.name}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
-        <p className="mt-2 text-sm text-[#a9a9a9]">{session.venue.name} · Hall {session.hall.name}</p>
-        <p className="mt-2 text-sm">{shortSessionDate(session.date)} · {session.time}</p>
-        <p className="mt-2 text-xs text-[#a9a9a9]">{session.format.name} · {session.language.name} · {session.movie.ageRating.code}</p>
+
+        {/* RIGHT SIDE */}
+        <div className="flex w-full flex-col justify-between gap-6 border-t border-white/10 p-5 sm:p-7 lg:w-67.5 lg:shrink-0 lg:border-t-0 lg:border-l lg:border-dashed">
+          {/* Order reference */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#A9A9A9]">
+              Order
+            </p>
+
+            <p className="mt-1 break-all text-sm font-bold">
+              #{order.reference}
+            </p>
+          </div>
+
+          {/* Price and refund */}
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm font-medium text-[#A9A9A9]">
+                {order.status === "refunded" ? "Total refunded" : "Total paid"}
+              </span>
+
+              <span className="text-2xl font-extrabold">
+                ₾{money(order.totalPrice)}
+              </span>
+            </div>
+
+            {order.isUpcoming && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (order.isRefundable) {
+                      onRefund(order);
+                    }
+                  }}
+                  disabled={!order.isRefundable}
+                  aria-describedby={
+                    !order.isRefundable
+                      ? `refund-reason-${order.id}`
+                      : undefined
+                  }
+                  className="w-full cursor-pointer rounded-full bg-[#353747] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#444658] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Refund
+                </button>
+
+                {!order.isRefundable && (
+                  <p
+                    id={`refund-reason-${order.id}`}
+                    className="mt-2 text-center text-xs text-[#A9A9A9]"
+                  >
+                    {unavailable}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {order.status === "refunded" && (
+              <p className="mt-3 text-xs font-medium text-[#A9A9A9]">
+                Refunded
+              </p>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
-    <dl className="mt-5 space-y-3 border-t border-[#2a2c3d] pt-4 text-xs">
-      <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Order</dt><dd className="break-all text-right">#{order.reference}</dd></div>
-      <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Seats</dt><dd className="text-right font-semibold">{order.tickets.map((ticket) => ticket.seatCode).join(", ")}</dd></div>
-      <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Tickets</dt><dd className="text-right">{ticketSummary(order.tickets)}</dd></div>
-      <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Seat ticket types</dt><dd className="min-w-0 text-right"><ul className="space-y-2 break-words">{order.tickets.map((ticket) => <li key={ticket.id}>Seat {ticket.seatCode} — {ticket.ticketType.name}</li>)}</ul></dd></div>
-      <div className="flex justify-between gap-4"><dt className="text-[#a9a9a9]">Payment card</dt><dd>•••• {order.cardLastFour}</dd></div>
-      <div className="flex items-center justify-between gap-4 border-t border-[#2a2c3d] pt-4"><dt className="text-[#a9a9a9]">{order.status === "refunded" ? "TOTAL REFUNDED" : "TOTAL PAID"}</dt><dd className="text-lg font-extrabold">₾ {money(order.totalPrice)}</dd></div>
-    </dl>
-    {order.isUpcoming && <div className="mt-4">
-      <span title={!order.isRefundable ? unavailable : undefined} className="inline-block">
-        <button type="button" onClick={() => { if (order.isRefundable) onRefund(order); }} disabled={!order.isRefundable} aria-describedby={!order.isRefundable ? `refund-reason-${order.id}` : undefined} className="cursor-pointer rounded-full bg-white/10 px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:text-[#a9a9a9] disabled:opacity-50">Refund</button>
-      </span>
-      {!order.isRefundable && <p id={`refund-reason-${order.id}`} className="mt-2 text-xs text-[#a9a9a9]">{unavailable}</p>}
-    </div>}
-  </article>;
+    </article>
+  );
 };
 
 export default TicketCard;

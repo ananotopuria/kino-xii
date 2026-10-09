@@ -14,7 +14,8 @@ type LoginModalProps = {
 
 const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
   const { signIn } = useAuth();
-  const { serverErrors, apiError, clearFieldError, showError, submit } = useAuthFormFeedback("login");
+  const { serverErrors, apiError, clearFieldError, showError, submit } =
+    useAuthFormFeedback("login");
 
   const {
     register,
@@ -27,7 +28,12 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
 
   const errors = {
     ...clientErrors,
-    ...Object.fromEntries(Object.entries(serverErrors).map(([field, message]) => [field, { message }])),
+    ...Object.fromEntries(
+      Object.entries(serverErrors).map(([field, message]) => [
+        field,
+        { message },
+      ]),
+    ),
   };
 
   const onSubmit = async (data: LoginFormData) => {
@@ -43,7 +49,7 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
     <Modal onClose={onClose}>
       <div
         className="
-          relative w-[min(403px,calc(100vw-32px))] max-h-[calc(100dvh-32px)] overflow-y-auto break-words rounded-[28px]
+          relative w-[min(403px,calc(100vw-32px))] max-h-[calc(100dvh-32px)] overflow-y-auto wrap-break-word rounded-[28px]
           border border-[#2A2C3D]
           bg-[#070C1C] p-5 sm:p-8
           text-white
@@ -70,7 +76,11 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
           </button>
         </div>
 
-        <form onSubmit={submit(handleSubmit(onSubmit))} className="mt-6" noValidate>
+        <form
+          onSubmit={submit(handleSubmit(onSubmit))}
+          className="mt-6"
+          noValidate
+        >
           <div className="space-y-6">
             {/* EMAIL */}
             <div>
@@ -87,7 +97,9 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
                 <input
                   id="email"
                   type="email"
-                  {...register("email", { onChange: () => clearFieldError("email") })}
+                  {...register("email", {
+                    onChange: () => clearFieldError("email"),
+                  })}
                   placeholder="example@gmail.com"
                   className={`
                     h-10 w-full rounded-xl border
@@ -150,7 +162,9 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
                 <input
                   id="password"
                   type="password"
-                  {...register("password", { onChange: () => clearFieldError("password") })}
+                  {...register("password", {
+                    onChange: () => clearFieldError("password"),
+                  })}
                   placeholder="••••••••"
                   className={`
                     h-10 w-full rounded-xl border
@@ -211,11 +225,12 @@ const LoginModal = ({ onClose, onSignUp, onSuccess }: LoginModalProps) => {
             className="
               mt-6 flex w-full cursor-pointer
               items-center justify-center
-              rounded-full bg-[#EC3013]
+              rounded-full bg-[#505261]
               px-5.5 py-3.25
-              text-sm font-extrabold text-white
+              text-sm font-extrabold text-[#A9A9A9]
               transition
-              hover:bg-[#d92b11]
+              hover:bg-[#EC3013]
+              hover:text-white
               disabled:cursor-not-allowed
               disabled:bg-[#505261]
               disabled:text-[#A9A9A9]

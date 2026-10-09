@@ -158,51 +158,52 @@ const Sessions = () => {
               </p>
             )}
             <div className="space-y-8">
-              {resultsReady && sessions.data.data.map(({ movie, sessions: movieSessions }) => (
-                <article
-                  key={movie.id}
-                  className="min-w-0 border-b border-[#2a2c3d] pb-8 last:border-0 last:pb-0"
-                >
-                  <Link
-                    to={`/movies/${movie.slug}`}
-                    className="mb-3.5 flex w-fit items-center gap-4 rounded-lg focus-visible:outline-2 focus-visible:outline-white"
+              {resultsReady &&
+                sessions.data.data.map(({ movie, sessions: movieSessions }) => (
+                  <article
+                    key={movie.id}
+                    className="min-w-0 border-b border-[#2a2c3d] pb-8 last:border-0 last:pb-0"
                   >
-                    <img
-                      src={movie.posterUrl}
-                      alt={movie.title}
-                      className="h-20 w-14 shrink-0 rounded-lg object-cover"
-                    />
-                    <div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h2 className="text-lg font-extrabold leading-tight">
-                          {movie.title}
-                        </h2>
-                        <span className="rounded-full bg-[#ec3013]/10 px-2 py-1 text-xs font-semibold leading-none text-[#ec3013]">
-                          {movie.ageRating.code}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-sm leading-[1.3] text-[#a9a9a9]">
-                        {movie.runtimeMinutes} min
-                      </p>
-                    </div>
-                  </Link>
-                  <div
-                    role="region"
-                    aria-label={`${movie.title} showtimes`}
-                    tabIndex={0}
-                    className="flex gap-3 overflow-x-auto pb-1 focus-visible:outline-2 focus-visible:outline-white"
-                  >
-                    {movieSessions.map((session) => (
-                      <SessionCard
-                        key={session.id}
-                        session={session}
-                        variant="listing"
-                        minAge={movie.ageRating.minAge}
+                    <Link
+                      to={`/movies/${movie.slug}`}
+                      className="mb-3.5 flex w-fit items-center gap-4 rounded-lg focus-visible:outline-2 focus-visible:outline-white"
+                    >
+                      <img
+                        src={movie.posterUrl}
+                        alt={movie.title}
+                        className="h-20 w-14 shrink-0 rounded-lg object-cover"
                       />
-                    ))}
-                  </div>
-                </article>
-              ))}
+                      <div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h2 className="text-lg font-extrabold leading-tight">
+                            {movie.title}
+                          </h2>
+                          <span className="rounded-full bg-[#ec3013]/10 px-2 py-1 text-xs font-semibold leading-none text-[#ec3013]">
+                            {movie.ageRating.code}
+                          </span>
+                        </div>
+                        <p className="mt-3 text-sm leading-[1.3] text-[#a9a9a9]">
+                          {movie.runtimeMinutes} min
+                        </p>
+                      </div>
+                    </Link>
+                    <div
+                      role="region"
+                      aria-label={`${movie.title} showtimes`}
+                      tabIndex={0}
+                      className="hide-scrollbar flex gap-3 overflow-x-auto pb-1 focus-visible:outline-2 focus-visible:outline-white"
+                    >
+                      {movieSessions.map((session) => (
+                        <SessionCard
+                          key={session.id}
+                          session={session}
+                          variant="listing"
+                          minAge={movie.ageRating.minAge}
+                        />
+                      ))}
+                    </div>
+                  </article>
+                ))}
             </div>
             {meta && meta.lastPage > 1 && (
               <nav

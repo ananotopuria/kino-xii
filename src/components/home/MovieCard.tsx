@@ -81,7 +81,7 @@ const MovieCard = ({ movie, active, onActivate }: MovieCardProps) => {
 
           <Link
             to={`/movies/${encodeURIComponent(movie.slug)}`}
-            className="cursor-pointer rounded-full bg-[#FF3217] px-5 py-2 text-xs font-semibold text-white transition hover:bg-[#e82b13]"
+            className="cursor-pointer rounded-full bg-[#EC3013] px-5 py-2 text-xs font-semibold text-white transition hover:bg-[#e82b13]"
           >
             Buy Ticket
           </Link>

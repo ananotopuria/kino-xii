@@ -21,7 +21,8 @@ type RegisterModalProps = {
 const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
   const { signUp } = useAuth();
 
-  const { serverErrors, apiError, clearFieldError, showError, submit } = useAuthFormFeedback("register");
+  const { serverErrors, apiError, clearFieldError, showError, submit } =
+    useAuthFormFeedback("register");
   const [avatar, setAvatar] = useState<File | undefined>();
   const [avatarPreview, setAvatarPreview] = useState("");
   const [avatarError, setAvatarError] = useState("");
@@ -37,7 +38,12 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
 
   const errors = {
     ...clientErrors,
-    ...Object.fromEntries(Object.entries(serverErrors).map(([field, message]) => [field, { message }])),
+    ...Object.fromEntries(
+      Object.entries(serverErrors).map(([field, message]) => [
+        field,
+        { message },
+      ]),
+    ),
   };
 
   useEffect(() => {
@@ -137,7 +143,7 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
     <Modal onClose={onClose}>
       <div
         className="
-          relative w-[min(476px,calc(100vw-32px))] max-h-[calc(100dvh-32px)] overflow-y-auto break-words
+          relative w-[min(476px,calc(100vw-32px))] max-h-[calc(100dvh-32px)] overflow-y-auto wrap-break-word
           rounded-[28px]
           border border-[#2A2C3D]
           bg-[#070C1C]
@@ -162,7 +168,11 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
           </button>
         </div>
 
-        <form onSubmit={submit(handleSubmit(onSubmit))} noValidate className="mt-6">
+        <form
+          onSubmit={submit(handleSubmit(onSubmit))}
+          noValidate
+          className="mt-6"
+        >
           {/* AVATAR */}
           <div>
             <label className="flex w-fit cursor-pointer items-center gap-3">
@@ -203,7 +213,9 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
               />
             </label>
 
-            <p className="mt-1 min-h-4 text-xs text-[#EC3013]">{avatarError || serverErrors.avatar}</p>
+            <p className="mt-1 min-h-4 text-xs text-[#EC3013]">
+              {avatarError || serverErrors.avatar}
+            </p>
           </div>
 
           {/* USERNAME */}
@@ -221,7 +233,9 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
               <input
                 id="username"
                 type="text"
-                {...register("username", { onChange: () => clearFieldError("username") })}
+                {...register("username", {
+                  onChange: () => clearFieldError("username"),
+                })}
                 placeholder="User"
                 className={getInputClass(
                   Boolean(errors.username),
@@ -252,7 +266,9 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
               <input
                 id="register-email"
                 type="email"
-                {...register("email", { onChange: () => clearFieldError("email") })}
+                {...register("email", {
+                  onChange: () => clearFieldError("email"),
+                })}
                 placeholder="example@gmail.com"
                 className={getInputClass(
                   Boolean(errors.email),
@@ -285,7 +301,9 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
                 <input
                   id="register-password"
                   type="password"
-                  {...register("password", { onChange: () => clearFieldError("password") })}
+                  {...register("password", {
+                    onChange: () => clearFieldError("password"),
+                  })}
                   placeholder="••••••••"
                   className={getInputClass(
                     Boolean(errors.password),
@@ -316,7 +334,9 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
                 <input
                   id="confirm-password"
                   type="password"
-                  {...register("confirmPassword", { onChange: () => clearFieldError("confirmPassword") })}
+                  {...register("confirmPassword", {
+                    onChange: () => clearFieldError("confirmPassword"),
+                  })}
                   placeholder="••••••••"
                   className={getInputClass(
                     Boolean(errors.confirmPassword),
@@ -342,19 +362,19 @@ const RegisterModal = ({ onClose, onLogIn, onSuccess }: RegisterModalProps) => {
           {/* SUBMIT */}
           <button
             type="submit"
-            disabled={
-              isSubmitting || Boolean(avatarError)
-            }
+            disabled={isSubmitting || Boolean(avatarError)}
             className="
               mt-4 w-full rounded-full
-              bg-[#EC3013]
+              bg-[#505261]
               px-5.5 py-3.25
-              text-sm font-extrabold text-white
+              text-sm font-extrabold text-[#A9A9A9]
               transition
-              hover:bg-[#d92b11]
+              hover:bg-[#EC3013]
+               hover:text-white
               disabled:cursor-not-allowed
               disabled:bg-[#505261]
               disabled:text-[#A9A9A9]
+              cursor-pointer
             "
           >
             {isSubmitting ? "Creating account..." : "Sign up"}

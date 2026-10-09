@@ -39,7 +39,7 @@ const ComingSoon = () => {
             aria-expanded={expanded}
             aria-controls="coming-soon-movies"
             onClick={() => setExpanded((value) => !value)}
-            className="cursor-pointer text-sm font-medium text-[#FF3217]"
+            className="cursor-pointer text-sm font-medium text-[#EC3013]"
           >
             {expanded ? "Show less" : "See all"}
           </button>

@@ -18,7 +18,7 @@ const SessionDateFilter = ({ selectedDate, onSelectDate }: SessionDateFilterProp
   });
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1">
+    <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-1">
       {dates.map((date) => (
         <button key={date.value} type="button" aria-pressed={selectedDate === date.value}
           aria-label={date.value} onClick={() => onSelectDate(date.value)}

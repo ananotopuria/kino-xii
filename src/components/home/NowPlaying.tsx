@@ -39,7 +39,7 @@ const NowPlaying = () => {
 
         <Link
           to="/sessions"
-          className="cursor-pointer text-sm font-medium text-[#FF3217]"
+          className="cursor-pointer text-sm font-medium text-[#EC3013]"
         >
           See all
         </Link>
@@ -54,7 +54,7 @@ const NowPlaying = () => {
           role="region"
           aria-label="Now playing movies"
           tabIndex={0}
-          className="hide-scrollbar flex items-stretch gap-4 overflow-x-auto p-1 pb-2 focus-visible:outline-2 focus-visible:outline-white"
+          className="hide-scrollbar flex items-stretch gap-4 overflow-x-auto p-1 pb-2"
         >
           {movies.map((movie) => (
             <MovieCard

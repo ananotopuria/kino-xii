@@ -13,11 +13,16 @@ input[data-header-search]::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
 
-.hide-scrollbar {
+/* Both aliases share one rule; apply it to the element that owns scrolling. */
+.hide-scrollbar,
+.no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.hide-scrollbar::-webkit-scrollbar {
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
